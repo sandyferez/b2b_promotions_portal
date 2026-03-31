@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ALGO1 — Promotions Platform Prototype</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f1f5f9; color: #1e293b; -webkit-font-smoothing: antialiased; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 2000px; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.6; } }
+.fade-in { animation: fadeIn .3s ease-out; }
+.slide-down { animation: slideDown .3s ease-out; overflow: hidden; }
+
+/* ── Global nav ── */
+.g-nav { background: #0F1F3D; color: #fff; height: 52px; display: flex; align-items: center; padding: 0 28px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 6px rgba(0,0,0,.2); }
+.g-nav-brand { font-size: 15px; font-weight: 900; letter-spacing: 3px; color: #3b82f6; margin-right: 36px; }
+.g-nav-items { display: flex; gap: 0; }
+.g-nav-item { padding: 14px 20px; font-size: 12.5px; font-weight: 600; color: #94a3b8; cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; letter-spacing: .02em; }
+.g-nav-item:hover { color: #e2e8f0; }
+.g-nav-item.active { color: #fff; border-bottom-color: #3b82f6; }
+.g-nav-item .nav-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font-size: 10px; font-weight: 700; margin-left: 6px; }
+.g-nav-user { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.g-nav-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#1e40af,#3b82f6); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; }
+.g-nav-role { font-size: 11px; color: #64748b; }
+
+/* ── Page shell ── */
+.page-shell { min-height: calc(100vh - 52px); display: flex; flex-direction: column; }
+.page-header { background: #fff; border-bottom: 1.5px solid #e2e8f0; padding: 20px 32px; }
+.page-header-inner { max-width: 1200px; margin: 0 auto; }
+.page-title { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -.02em; }
+.page-desc { font-size: 13px; color: #64748b; margin-top: 3px; }
+.page-content { flex: 1; padding: 20px 32px 40px; }
+.page-content-inner { max-width: 1200px; margin: 0 auto; }
+
+/* ── Buttons ── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 22px; border-radius: 10px; font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .15s; border: none; }
+.btn-primary { background: #2563eb; color: #fff; box-shadow: 0 1px 3px rgba(37,99,235,.3); }
+.btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(37,99,235,.3); }
+.btn-secondary { background: #fff; color: #64748b; border: 1.5px solid #e2e8f0; }
+.btn-secondary:hover { background: #f8fafc; border-color: #cbd5e1; }
+.btn-success { background: #059669; color: #fff; }
+.btn-success:hover { background: #047857; }
+.btn-danger { background: #dc2626; color: #fff; }
+.btn-danger:hover { background: #b91c1c; }
+.btn-warning { background: #f59e0b; color: #0f172a; }
+.btn-ghost { background: transparent; color: #64748b; border: 1.5px solid #e2e8f0; padding: 8px 16px; font-size: 12px; font-weight: 600; border-radius: 8px; cursor: pointer; font-family: inherit; transition: all .15s; }
+.btn-ghost:hover { background: #f8fafc; border-color: #cbd5e1; }
+.btn-sm { padding: 7px 16px; font-size: 12px; border-radius: 8px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; pointer-events: none; }
+
+/* ── Cards ── */
+.card { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; transition: all .15s; }
+.card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.05); }
+.card-selected { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); background: #f0f7ff; }
+
+/* ── Chips ── */
+.chip { display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; border: 1.5px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer; transition: all .15s; user-select: none; }
+.chip:hover { border-color: #93c5fd; color: #2563eb; background: #eff6ff; }
+.chip.active { border-color: #2563eb; background: #2563eb; color: #fff; }
+
+/* ── Select / Input ── */
+.sel { width: 100%; padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; color: #334155; background: #fff; appearance: none; cursor: pointer; transition: border-color .15s; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+.sel:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.sel:disabled { color: #cbd5e1; cursor: not-allowed; background-color: #f8fafc; }
+.input { width: 100%; padding: 9px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 13px; font-family: inherit; color: #334155; transition: border-color .15s; }
+.input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.input::placeholder { color: #cbd5e1; }
+textarea.input { resize: vertical; }
+
+/* ── Toggle ── */
+.toggle-wrap { display: flex; align-items: center; cursor: pointer; }
+.toggle-track { width: 40px; height: 22px; border-radius: 11px; background: #e2e8f0; cursor: pointer; transition: background .2s; position: relative; flex-shrink: 0; }
+.toggle-track.on { background: #2563eb; }
+.toggle-track.danger.on { background: #ef4444; }
+.toggle-knob { width: 18px; height: 18px; border-radius: 9px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); position: absolute; top: 2px; left: 2px; transition: transform .2s ease; }
+.toggle-track.on .toggle-knob { transform: translateX(18px); }
+
+/* ── Panel (accordion) ── */
+.panel { border: 1.5px solid #e2e8f0; border-radius: 12px; margin-bottom: 8px; background: #fff; overflow: hidden; transition: border-color .2s, box-shadow .2s; }
+.panel.open { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(37,99,235,.06); }
+.panel.excl { border-color: #fecaca; }
+.panel.excl.open { border-color: #f87171; box-shadow: 0 0 0 3px rgba(239,68,68,.06); }
+.panel-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; transition: background .15s; user-select: none; }
+.panel-header:hover { background: #f8fafc; }
+.panel.excl .panel-header:hover { background: #fef2f2; }
+.panel.open .panel-header { background: #f0f7ff; }
+.panel.excl.open .panel-header { background: #fef2f2; }
+.panel-num { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 11px; font-weight: 800; color: #fff; background: #2563eb; }
+.panel-num.red { background: #ef4444; }
+.panel-title { font-size: 13.5px; font-weight: 700; color: #1e293b; margin-left: 10px; flex: 1; }
+.panel-summary { font-size: 11.5px; color: #94a3b8; margin-left: 8px; font-weight: 500; max-width: 200px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel-arrow { color: #94a3b8; transition: transform .2s; font-size: 11px; margin-left: 8px; }
+.panel.open .panel-arrow { transform: rotate(90deg); }
+.panel-content { padding: 4px 16px 16px; }
+
+/* ── Field label ── */
+.field-label { font-size: 10.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.field-group { margin-bottom: 14px; }
+
+/* ── Badges ── */
+.badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.badge-blue { background: #dbeafe; color: #1e40af; }
+.badge-green { background: #d1fae5; color: #065f46; }
+.badge-amber { background: #fef3c7; color: #92400e; }
+.badge-red { background: #fee2e2; color: #991b1b; }
+.badge-purple { background: #e0e7ff; color: #4338ca; }
+.badge-gray { background: #f1f5f9; color: #475569; }
+
+/* ── KPI ── */
+.kpi-row { display: flex; gap: 12px; margin: 12px 0; }
+.kpi { flex: 1; background: #f8faff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; text-align: center; }
+.kpi-val { font-size: 20px; font-weight: 800; color: #0f172a; line-height: 1.1; }
+.kpi-lbl { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
+
+/* ── State pills ── */
+.sp { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 6px; font-size: 11.5px; font-weight: 700; }
+.sp-draft { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+.sp-pending { background: #fffbeb; color: #92400e; border: 1px solid #fcd34d; }
+.sp-scheduled { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+.sp-live { background: #f0fdf4; color: #059669; border: 1px solid #bbf7d0; }
+.sp-paused { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.sp-ended { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+
+/* ── Progress bar ── */
+.progress-bar { display: flex; gap: 4px; }
+.progress-step { flex: 1; text-align: center; padding: 8px 4px; border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.progress-step.done { background: #2563eb; color: #fff; }
+.progress-step.current { background: #2563eb; color: #fff; }
+.progress-step.upcoming { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+
+/* ── Summary panel ── */
+.summary-panel { background: #f8faff; border: 1.5px solid #dbeafe; border-radius: 12px; padding: 16px; }
+.summary-panel-title { font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0; }
+.summary-row { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+.summary-label { font-weight: 700; color: #0f172a; }
+.summary-value { color: #64748b; text-align: right; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Reach card ── */
+.reach-card { border: 2px solid #86efac; border-radius: 16px; padding: 24px 20px; background: linear-gradient(180deg, #f0fdf4 0%, #fff 100%); text-align: center; transition: all .3s; }
+.reach-card.warning { border-color: #fbbf24; background: linear-gradient(180deg, #fffbeb 0%, #fff 100%); }
+
+/* ── Attention card ── */
+.attn-card { border-left: 4px solid #dc2626; padding: 16px 20px; margin-bottom: 10px; background: #fef2f2; border-radius: 0 12px 12px 0; display: flex; justify-content: space-between; align-items: center; transition: all .15s; }
+.attn-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.attn-card.amber { border-left-color: #f59e0b; background: #fffbeb; }
+
+/* ── Tab bar ── */
+.tab-bar { display: flex; gap: 0; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px; }
+.tab-item { padding: 10px 20px; font-size: 13px; font-weight: 600; color: #64748b; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; display: flex; align-items: center; gap: 6px; }
+.tab-item:hover { color: #334155; }
+.tab-item.active { color: #0f172a; border-bottom-color: #2563eb; }
+
+/* ── Toast ── */
+.toast { position: fixed; bottom: 24px; right: 24px; background: #0f172a; color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; z-index: 200; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.2); animation: fadeIn .3s ease-out; }
+.toast-undo { color: #93c5fd; cursor: pointer; font-weight: 700; text-decoration: underline; }
+
+/* ── Modal ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.5); z-index: 300; display: flex; align-items: center; justify-content: center; animation: fadeIn .2s; }
+.modal-box { background: #fff; border-radius: 16px; padding: 28px; max-width: 520px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,.15); }
+.modal-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+.modal-text { font-size: 13px; color: #64748b; line-height: 1.6; margin-bottom: 20px; }
+
+/* ── Preview bar ── */
+.preview-bar { background: #0f172a; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; color: #fff; }
+
+/* ── Info box ── */
+.info-box { border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; gap: 12px; align-items: flex-start; }
+.info-box.blue { background: #eff6ff; border: 1.5px solid #bfdbfe; }
+.info-box.amber { background: #fffbeb; border: 1.5px solid #fde68a; }
+.info-box.green { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+.info-box.red { background: #fef2f2; border: 1.5px solid #fecaca; }
+.info-box.purple { background: #f5f3ff; border: 1.5px solid #c4b5fd; }
+
+/* ── Cv1 banner ── */
+.cv1-card { background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border: 1.5px solid #c7d2fe; border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+
+/* ── Audit trail ── */
+.audit-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 12.5px; }
+.audit-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+
+/* ── Skeleton ── */
+.skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+
+/* ── Bar chart ── */
+.bar-chart { display: flex; align-items: flex-end; gap: 3px; height: 60px; }
+.bar-chart-bar { flex: 1; background: #2563eb; border-radius: 3px 3px 0 0; transition: height .4s ease-out; min-width: 4px; opacity: .7; }
+.bar-chart-bar:hover { opacity: 1; }
+
+/* ── Store checkbox ── */
+.store-check { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; margin-bottom: 6px; cursor: pointer; transition: all .15s; }
+.store-check:hover { border-color: #93c5fd; background: #f8faff; }
+.store-check.checked { border-color: #2563eb; background: #eff6ff; }
+.store-check-box { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+.store-check.checked .store-check-box { background: #2563eb; border-color: #2563eb; color: #fff; }
+
+/* ── Scale Vision ── */
+.sv-pipeline { display: flex; gap: 0; margin: 16px 0; }
+.sv-pipe-seg { flex: 1; text-align: center; padding: 10px 4px; position: relative; cursor: pointer; transition: all .15s; }
+.sv-pipe-seg:hover { opacity: .85; }
+.sv-pipe-seg .sv-pipe-val { font-size: 22px; font-weight: 800; color: #fff; }
+.sv-pipe-seg .sv-pipe-lbl { font-size: 10px; font-weight: 600; color: rgba(255,255,255,.85); text-transform: uppercase; letter-spacing: .06em; margin-top: 2px; }
+.sv-pipe-seg:first-child { border-radius: 10px 0 0 10px; }
+.sv-pipe-seg:last-child { border-radius: 0 10px 10px 0; }
+.sv-triage-card { padding: 14px 18px; margin-bottom: 8px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; transition: all .15s; cursor: pointer; }
+.sv-triage-card:hover { transform: translateX(4px); }
+.sv-triage-card.critical { background: #fef2f2; border-left: 4px solid #dc2626; }
+.sv-triage-card.warning { background: #fffbeb; border-left: 4px solid #f59e0b; }
+.sv-triage-card.info { background: #eff6ff; border-left: 4px solid #3b82f6; }
+.sv-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+.sv-table thead th { background: #f8fafc; color: #64748b; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 10px 12px; text-align: left; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; cursor: pointer; user-select: none; white-space: nowrap; }
+.sv-table thead th:hover { color: #334155; background: #f1f5f9; }
+.sv-table tbody td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #334155; white-space: nowrap; }
+.sv-table tbody tr:hover { background: #f8faff; }
+.sv-table tbody tr.group-row td { background: #f1f5f9; font-weight: 700; color: #0f172a; font-size: 11.5px; }
+.sv-heatcell { display: inline-block; width: 36px; height: 20px; border-radius: 4px; }
+.sv-sparkline { display: inline-flex; align-items: flex-end; gap: 1px; height: 20px; }
+.sv-sparkline span { display: block; width: 3px; border-radius: 1px 1px 0 0; background: #2563eb; }
+
+/* ── Forecasting ── */
+.fc-dial { width: 120px; height: 120px; border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+.fc-dial-inner { text-align: center; position: relative; z-index: 1; }
+.fc-bar { height: 10px; border-radius: 5px; background: #e2e8f0; overflow: hidden; }
+.fc-bar-fill { height: 100%; border-radius: 5px; transition: width .8s ease-out; }
+
+/* ── Search bar ── */
+.sv-search { display: flex; align-items: center; gap: 8px; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 8px 14px; max-width: 320px; transition: border-color .15s; }
+.sv-search:focus-within { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+.sv-search input { border: none; outline: none; font-size: 13px; font-family: inherit; color: #334155; flex: 1; background: transparent; }
+.sv-search input::placeholder { color: #94a3b8; }
+
+/* ── Filter chips row ── */
+.sv-filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useEffect, useCallback } = React;
+
+/* ═══════════════════════════════════════════
+   DATA
+   ═══════════════════════════════════════════ */
+const STORES = [
+  { id:1, name:"Tesco Metro, Camden", region:"London", hours:"07:00–22:00" },
+  { id:2, name:"Tesco Express, King's Cross", region:"London", hours:"06:00–23:00" },
+  { id:3, name:"Tesco Extra, Brixton", region:"London", hours:"06:00–00:00" },
+  { id:4, name:"Tesco Superstore, Reading", region:"South East", hours:"07:00–22:00" },
+  { id:5, name:"Tesco Express, Oxford", region:"South East", hours:"06:00–23:00" },
+  { id:6, name:"Tesco Metro, Bristol", region:"South West", hours:"07:00–22:00" },
+];
+
+const GOALS = [
+  { id:"trial", icon:"\uD83C\uDFAF", name:"Drive Trial", desc:"Encourage shoppers to try a product for the first time.", metric:"% new-to-brand buyers" },
+  { id:"purchase", icon:"\uD83D\uDCC8", name:"Increase Purchase", desc:"Existing buyers purchasing more or more often.", metric:"Purchase uplift vs prior period" },
+  { id:"stock", icon:"\uD83D\uDCE6", name:"Clear Stock", desc:"Move a specific product quickly.", metric:"Units sold vs stock target" },
+  { id:"loyalty", icon:"\u2B50", name:"Loyalty Reward", desc:"Move shoppers up a loyalty tier mid-shop. Loyalty Team only.", metric:"Shoppers who moved tier" },
+];
+
+const MECHANICS = [
+  { id:"pct_off", name:"% Off", desc:"Percentage discount on a product.", mostUsedFor:["trial","purchase"] },
+  { id:"spend_get", name:"Spend X Get Y", desc:"Basket threshold reward.", mostUsedFor:["purchase"] },
+  { id:"bogo", name:"Buy One Get One", desc:"Free or discounted additional item.", mostUsedFor:["stock"] },
+  { id:"bonus_pts", name:"Bonus Loyalty Points", desc:"Extra points on purchase. Loyalty tier progression.", mostUsedFor:["loyalty"] },
+];
+
+const CATEGORIES = ["Breakfast Cereals","Pet Food","Soft Drinks","Dairy","Snacks & Confectionery","Bakery","Frozen","Health & Beauty","Household","Baby & Toddler"];
+const BRANDS_MAP = {
+  "Breakfast Cereals":["Kellogg's","Weetabix","Nestlé","Quaker","Own Label"],
+  "Pet Food":["Whiskas","Felix","Pedigree","James Wellbeloved"],
+  "Soft Drinks":["Coca-Cola","Pepsi","Lucozade","Ribena"],
+  "Dairy":["Müller","Yeo Valley","Arla","Cathedral City"],
+  "Snacks & Confectionery":["Cadbury","Walkers","Mars","Pringles"],
+  "Bakery":["Warburtons","Hovis","Kingsmill"],
+  "Frozen":["Birds Eye","McCain","Aunt Bessie's"],
+  "Health & Beauty":["Dove","L'Oréal","Nivea"],
+  "Household":["Fairy","Persil","Dettol"],
+  "Baby & Toddler":["Pampers","Aptamil","Ella's Kitchen"],
+};
+const LOYALTY_TIERS = ["Bronze","Silver","Gold","Platinum"];
+const AGE_RANGES = ["18–24","25–34","35–44","45–54","55–64","65+"];
+const TOTAL_SHOPPERS = 36200;
+const REJECT_REASONS = ["Budget too high for this period","Wrong audience for this product","Timing conflict with existing promotion","Duplicate of active promotion","Insufficient stock for this promotion","Other (comment required)"];
+
+const CV1_FEATURES = [
+  { name:"Automated Promotion Creation", icon:"\u2728", desc:"Brand Managers set objectives. ALGO1 generates targeted promotion proposals. Manual build remains available.", module:"Promotion Builder" },
+  { name:"LLM Campaign Analysis", icon:"\uD83E\uDDE0", desc:"Query campaign data in natural language: conversion by time of day, store performance, audience segment, weather correlation.", module:"Campaign Performance" },
+  { name:"Forecasting Tool", icon:"\uD83D\uDD2E", desc:"Before submission, ALGO1 estimates expected redemptions, projected spend, and goal likelihood. Recommends adjustments.", module:"Builder + Gateway + Performance" },
+  { name:"Predictive Pacing", icon:"\u23F1\uFE0F", desc:"Alerts when spend rate suggests budget will exhaust before end date. Suggests budget or timing adjustments.", module:"Campaign Performance" },
+  { name:"Conflict Detection", icon:"\u26A0\uFE0F", desc:"Identifies overlapping audiences for competing products before publication and warns the user. No competitor does this.", module:"Promotion Builder" },
+  { name:"Benchmarking", icon:"\uD83D\uDCCA", desc:"Compares performance against historical averages for the same goal and mechanic type.", module:"Campaign Performance" },
+  { name:"Brand Manager Access", icon:"\uD83D\uDC64", desc:"Direct platform access scoped to named brands. Same Promotion Builder plus automated creation.", module:"All modules" },
+  { name:"Brand Booking Interface", icon:"\uD83D\uDCD3", desc:"Self-serve entry point for brands: budget envelope, target categories, campaign objectives per period.", module:"New module" },
+  { name:"Auto-Approval Thresholds", icon:"\u2705", desc:"Promotions under configurable budget/ROAS thresholds auto-approve. Reduces bottleneck for low-risk promotions.", module:"Approval Gateway" },
+];
+
+/* ═══════════════════════════════════════════
+   SHARED COMPONENTS
+   ═══════════════════════════════════════════ */
+function Toggle({ enabled, onChange, danger }) {
+  return (
+    <div className="toggle-wrap" onClick={() => onChange(!enabled)}>
+      <div className={`toggle-track${enabled ? " on" : ""}${danger ? " danger" : ""}`}><div className="toggle-knob"/></div>
+    </div>
+  );
+}
+function Chip({ label, active, onClick }) {
+  return <span className={`chip${active ? " active" : ""}`} onClick={onClick}>{label}</span>;
+}
+function Toast({ message, undo, onClose }) {
+  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, []);
+  return <div className="toast"><span>{message}</span>{undo && <span className="toast-undo" onClick={undo}>Undo</span>}</div>;
+}
+function ModalDialog({ title, text, children, onClose }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+        <div className="modal-title">{title}</div>
+        {text && <div className="modal-text">{text}</div>}
+        {children}
+      </div>
+    </div>
+  );
+}
+function InfoBox({ type, icon, children }) {
+  return <div className={`info-box ${type}`}><span style={{ fontSize:18, flexShrink:0 }}>{icon}</span><div style={{ flex:1 }}>{children}</div></div>;
+}
+
+/* ═══════════════════════════════════════════
+   APP STATE (shared across modules)
+   ═══════════════════════════════════════════ */
+function App() {
+  const [activeModule, setActiveModule] = useState("configure");
+  const [toast, setToast] = useState(null);
+  const [modal, setModal] = useState(null);
+
+  /* Promotion lifecycle state */
+  const [pendingQueue, setPendingQueue] = useState([
+    { id:201, name:"BOGO Cadbury Dairy Milk 180g", goal:"stock", mechanic:"bogo", budget:5000, submitter:"Sarah Jones", submitterRole:"Algo1 Sales Team", submittedAgo:"5h", priority:"urgent", startDate:"3 Apr 2026", endDate:"10 Apr 2026", brand:"Cadbury", audience:"Snacks & Confectionery", stores:"All stores (6)", headline:"Buy One Get One Free", description:"Get a free Dairy Milk with every purchase" },
+    { id:202, name:"20% off Heinz Baked Beans 415g", goal:"trial", mechanic:"pct_off", budget:3000, submitter:"Sarah Jones", submitterRole:"Algo1 Sales Team", submittedAgo:"2h", priority:"high", startDate:"1 Apr 2026", endDate:"14 Apr 2026", brand:"Heinz", audience:"Breakfast Cereals, 25–44", stores:"All stores (6)", headline:"Try Heinz Baked Beans", description:"20% off your first purchase" },
+    { id:203, name:"Bonus Points — Tier Push", goal:"loyalty", mechanic:"bonus_pts", budget:1200, submitter:"Mike Chen", submitterRole:"Loyalty Team", submittedAgo:"8h", priority:"normal", startDate:"25 Mar 2026", endDate:"7 Apr 2026", brand:"Loyalty", audience:"Gold tier, Weekly+", stores:"London stores (3)", headline:"Earn 3x Points", description:"On your next shop" },
+  ]);
+
+  const [livePromos, setLivePromos] = useState([
+    { id:101, name:"20% off Heinz Baked Beans", goal:"trial", mechanic:"pct_off", brand:"Heinz", budget:3000, spent:2400, startDate:"1 Apr 2026", endDate:"14 Apr 2026", impressions:2847, claims:412, redeemed:289, claimRate:14.5, redemptionRate:70.1, submitter:"Sarah Jones", stores:"All stores (6)", audience:"Breakfast Cereals, 25–44", daysLeft:8, dailyImpressions:[120,180,210,260,340,380,410,290,260,210,180,0,0,0] },
+    { id:102, name:"BOGO Cadbury Dairy Milk", goal:"stock", mechanic:"bogo", brand:"Cadbury", budget:5000, spent:0, startDate:"3 Apr 2026", endDate:"10 Apr 2026", impressions:1200, claims:0, redeemed:0, claimRate:0, redemptionRate:0, submitter:"Sarah Jones", stores:"All stores (6)", audience:"Snacks & Confectionery", daysLeft:5, dailyImpressions:[200,300,350,350,0,0,0] },
+    { id:103, name:"Bonus Points — Tier Push", goal:"loyalty", mechanic:"bonus_pts", brand:"Tesco Loyalty", budget:1200, spent:800, startDate:"25 Mar 2026", endDate:"7 Apr 2026", impressions:3400, claims:890, redeemed:756, claimRate:26.2, redemptionRate:84.9, submitter:"Mike Chen", stores:"London stores (3)", audience:"Gold tier, Weekly+", daysLeft:7, dailyImpressions:[200,280,340,380,420,460,480,420,380,0,0,0,0] },
+  ]);
+
+  const [endedPromos, setEndedPromos] = useState([
+    { id:301, name:"15% off Weetabix 24pk", goal:"purchase", mechanic:"pct_off", brand:"Weetabix", budget:2000, spent:2000, startDate:"10 Mar", endDate:"24 Mar", impressions:4200, claims:1050, redeemed:890, claimRate:25.0, redemptionRate:84.8, submitter:"Sarah Jones", stores:"All stores (6)", audience:"Breakfast Cereals, Existing buyers", goalAchieved:true, summary:"Exceeded purchase target by 12%. Budget fully utilised. Average basket uplift 8.3%. New-to-brand conversion 12.3%, above the 8% average for this goal type." },
+    { id:302, name:"Spend £20 Get £3 Off Dairy", goal:"purchase", mechanic:"spend_get", brand:"Arla", budget:4000, spent:4000, startDate:"1 Mar", endDate:"14 Mar", impressions:5800, claims:1320, redeemed:1100, claimRate:22.8, redemptionRate:83.3, submitter:"Sarah Jones", stores:"All stores (6)", audience:"Dairy, 35+", goalAchieved:false, summary:"Reached 72% of purchase target. Redemption strong but audience narrower than expected. Recommend broadening age range on next run." },
+    { id:303, name:"3x Loyalty Points — Spring Push", goal:"loyalty", mechanic:"bonus_pts", brand:"Loyalty", budget:1800, spent:1650, startDate:"15 Mar", endDate:"28 Mar", impressions:6100, claims:2200, redeemed:1980, claimRate:36.1, redemptionRate:90.0, submitter:"Mike Chen", stores:"All stores (6)", audience:"Silver tier shoppers", goalAchieved:true, summary:"1,240 shoppers moved from Silver to Gold tier. 380 shoppers were within 50 points of threshold (near-miss group). Budget exhausted 1 day early." },
+  ]);
+
+  const [auditLog, setAuditLog] = useState([
+    { time:"31 Mar, 09:14", user:"Sarah Jones", action:"Submitted", detail:"BOGO Cadbury Dairy Milk submitted for approval", color:"#2563eb" },
+    { time:"31 Mar, 07:22", user:"Sarah Jones", action:"Submitted", detail:"20% off Heinz Baked Beans submitted for approval", color:"#2563eb" },
+    { time:"31 Mar, 01:05", user:"Mike Chen", action:"Submitted", detail:"Bonus Points — Tier Push submitted for approval", color:"#2563eb" },
+    { time:"30 Mar, 15:10", user:"John Smith", action:"Approved", detail:"15% off Weetabix approved and scheduled", color:"#059669" },
+    { time:"30 Mar, 14:05", user:"Sarah Jones", action:"Edited", detail:"Weetabix budget increased from £1,500 to £2,000", color:"#f59e0b" },
+    { time:"30 Mar, 14:05", user:"System", action:"Re-queued", detail:"Returned to Pending Approval (auto)", color:"#f59e0b" },
+    { time:"29 Mar, 11:32", user:"John Smith", action:"Approved", detail:"Spend £20 Get £3 Off Dairy approved", color:"#059669" },
+    { time:"28 Mar, 16:45", user:"John Smith", action:"Rejected", detail:"Rejected: Budget too high for this period", color:"#dc2626" },
+  ]);
+
+  const addToAudit = (entry) => setAuditLog(l => [{ ...entry, time: "Just now" }, ...l]);
+
+  /* Handle promo submission from builder */
+  const handleSubmitPromo = (promo) => {
+    const newPending = {
+      id: Date.now(),
+      name: promo.headline || `${GOALS.find(g=>g.id===promo.goal)?.name} — ${promo.brand || promo.category || "New Promotion"}`,
+      goal: promo.goal,
+      mechanic: promo.mechanic,
+      budget: parseInt(promo.budget) || 0,
+      submitter: "Sarah Jones",
+      submitterRole: "Algo1 Sales Team",
+      submittedAgo: "Just now",
+      priority: parseInt(promo.budget) > 4000 ? "high" : "normal",
+      startDate: promo.startDate,
+      endDate: promo.endDate,
+      brand: promo.brand || "",
+      audience: [promo.category, promo.brand, promo.frequency !== "any" ? promo.frequency : ""].filter(Boolean).join(", ") || "All eligible shoppers",
+      stores: promo.storeScope === "all" ? `All stores (${STORES.length})` : `${promo.selectedStores?.length || 0} stores`,
+      headline: promo.headline,
+      description: promo.description,
+    };
+    setPendingQueue(q => [newPending, ...q]);
+    addToAudit({ user:"Sarah Jones", action:"Submitted", detail:`${newPending.name} submitted for approval`, color:"#2563eb" });
+    setToast("Promotion submitted for approval");
+    setActiveModule("approval");
+  };
+
+  /* Approve */
+  const approvePromo = (p) => {
+    setPendingQueue(q => q.filter(x => x.id !== p.id));
+    const newLive = { ...p, status:"live", spent:0, impressions:0, claims:0, redeemed:0, claimRate:0, redemptionRate:0, daysLeft:14, dailyImpressions:[] };
+    setLivePromos(l => [newLive, ...l]);
+    addToAudit({ user:"John Smith", action:"Approved", detail:`${p.name} approved and scheduled`, color:"#059669" });
+    setToast(`${p.name} approved`);
+  };
+
+  /* Reject */
+  const rejectPromo = (id, reason, comment) => {
+    const p = pendingQueue.find(x => x.id === id);
+    setPendingQueue(q => q.filter(x => x.id !== id));
+    addToAudit({ user:"John Smith", action:"Rejected", detail:`${p?.name} rejected: ${reason}${comment ? ` — ${comment}` : ""}`, color:"#dc2626" });
+    setToast(`Promotion rejected. Submitter notified.`);
+  };
+
+  /* Pause / End / Budget actions on live */
+  const pausePromo = (id) => {
+    setLivePromos(l => l.filter(p => p.id !== id));
+    addToAudit({ user:"John Smith", action:"Paused", detail:`Promotion paused`, color:"#f59e0b" });
+    setToast("Promotion paused");
+  };
+  const endPromo = (id) => {
+    const p = livePromos.find(x => x.id === id);
+    if (p) {
+      setLivePromos(l => l.filter(x => x.id !== id));
+      setEndedPromos(e => [{ ...p, status:"ended", goalAchieved: p.claimRate > 12, summary:`Ended early. ${p.claims} claims, ${p.redeemed} redeemed. Claim rate ${p.claimRate}%.` }, ...e]);
+      addToAudit({ user:"Sarah Jones", action:"Ended", detail:`${p.name} ended early`, color:"#dc2626" });
+    }
+    setModal(null);
+    setToast("Promotion ended");
+  };
+  const increaseBudget = (id, amount) => {
+    setLivePromos(l => l.map(p => p.id === id ? { ...p, budget: p.budget + amount } : p));
+    addToAudit({ user:"Sarah Jones", action:"Budget", detail:`Budget increased by £${amount.toLocaleString()}`, color:"#2563eb" });
+    setToast(`Budget increased by £${amount.toLocaleString()}`);
+  };
+  const extendPromo = (id) => {
+    setLivePromos(l => l.map(p => p.id === id ? { ...p, daysLeft: p.daysLeft + 7 } : p));
+    addToAudit({ user:"Sarah Jones", action:"Extended", detail:`End date extended by 7 days`, color:"#2563eb" });
+    setToast("End date extended by 7 days");
+  };
+
+  const needsAttention = livePromos.filter(p => {
+    if (p.budget > 0 && p.spent / p.budget > 0.75 && p.daysLeft > 2) return true;
+    if (p.claims === 0 && p.impressions > 500) return true;
+    return false;
+  });
+
+  return (
+    <div>
+      {/* ── GLOBAL NAV ── */}
+      <div className="g-nav">
+        <span className="g-nav-brand">ALGO1</span>
+        <div className="g-nav-items">
+          {[["configure","Configure"],["builder","Promotion Builder"],["approval","Approval Gateway"],["performance","Campaign Performance"],["cv1","Commercial v1"],["scale","Scale Vision"],["forecast","Forecasting"]].map(([k,l]) => (
+            <div key={k} className={`g-nav-item${activeModule === k ? " active" : ""}`} onClick={() => setActiveModule(k)}>
+              {l}
+              {k === "approval" && pendingQueue.length > 0 && <span className="nav-badge" style={{ background:"#fcd34d", color:"#92400e" }}>{pendingQueue.length}</span>}
+              {k === "performance" && needsAttention.length > 0 && <span className="nav-badge" style={{ background:"#fecaca", color:"#991b1b" }}>{needsAttention.length}</span>}
+              {k === "cv1" && <span className="nav-badge" style={{ background:"#c7d2fe", color:"#4338ca" }}>9</span>}
+              {k === "scale" && <span className="nav-badge" style={{ background:"#dbeafe", color:"#1e40af" }}>1.2k</span>}
+              {k === "forecast" && <span className="nav-badge" style={{ background:"#c4b5fd", color:"#4338ca" }}>🔮</span>}
+            </div>
+          ))}
+        </div>
+        <div className="g-nav-user">
+          <div style={{ textAlign:"right" }}><div style={{ fontSize:12, fontWeight:600, color:"#e2e8f0" }}>Sarah Jones</div><div className="g-nav-role">Algo1 Sales Team · Trial 1</div></div>
+          <div className="g-nav-avatar">SJ</div>
+        </div>
+      </div>
+
+      {/* ── MODULES ── */}
+      {activeModule === "configure" && <ConfigureModule onComplete={() => { setToast("Setup complete"); setActiveModule("builder"); }} />}
+      {activeModule === "builder" && <BuilderModule onSubmit={handleSubmitPromo} />}
+      {activeModule === "approval" && <ApprovalModule queue={pendingQueue} auditLog={auditLog} onApprove={approvePromo} onReject={rejectPromo} toast={toast} setToast={setToast} />}
+      {activeModule === "performance" && <PerformanceModule live={livePromos} ended={endedPromos} needsAttention={needsAttention} onPause={pausePromo} onEnd={(id) => setModal({type:"end",id})} onIncreaseBudget={increaseBudget} onExtend={extendPromo} onClone={() => setActiveModule("builder")} onNavigate={setActiveModule} toast={toast} setToast={setToast} />}
+      {activeModule === "cv1" && <Cv1Module />}
+      {activeModule === "scale" && <ScaleModule />}
+      {activeModule === "forecast" && <ForecastModule />}
+
+      {/* Global modal */}
+      {modal?.type === "end" && (
+        <ModalDialog title="End Promotion Early" text="This cannot be undone. The promotion will stop delivering immediately. All performance data is preserved." onClose={() => setModal(null)}>
+          <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
+            <button className="btn btn-secondary btn-sm" onClick={() => setModal(null)}>Cancel</button>
+            <button className="btn btn-danger btn-sm" onClick={() => endPromo(modal.id)}>End Promotion</button>
+          </div>
+        </ModalDialog>
+      )}
+      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   MODULE 1: CONFIGURE
+   ═══════════════════════════════════════════ */
+function ConfigureModule({ onComplete }) {
+  const [step, setStep] = useState(1);
+  const [retailer, setRetailer] = useState({ name:"Tesco", contact:"John Smith", email:"j.smith@retailer.com", region:"United Kingdom" });
+  const [selStores, setSelStores] = useState(STORES.map(s => s.id));
+  const [users, setUsers] = useState([{ name:"Sarah Jones", role:"Algo1 Sales Team" }, { name:"Mike Chen", role:"Loyalty Team" }, { name:"John Smith", role:"Retailer Trade Team" }]);
+  const [approval, setApproval] = useState({ sales:true, loyalty:true, trade:false });
+  const [intPayload, setIntPayload] = useState(true);
+  const [intRedemption, setIntRedemption] = useState(false);
+  const labels = ["Retailer","Stores","Users & Roles","Approval Rules","Integration"];
+  const complete = step > 5;
+
+  if (complete) return (
+    <div className="page-shell"><div className="page-content"><div className="page-content-inner">
+      <div className="fade-in" style={{ background:"#f0fdf4", border:"2px solid #bbf7d0", borderRadius:16, padding:48, textAlign:"center", maxWidth:640, margin:"60px auto" }}>
+        <div style={{ fontSize:56, marginBottom:8 }}>✅</div>
+        <div style={{ fontSize:22, fontWeight:800, color:"#065f46", marginBottom:16 }}>Setup Complete</div>
+        <div style={{ display:"flex", justifyContent:"center", gap:16, flexWrap:"wrap", marginBottom:24 }}>
+          {["Retailer configured","Stores added","Users assigned","Approval rules active","Integration connected"].map(t => <span key={t} style={{ fontSize:12, color:"#065f46", fontWeight:600 }}>✓ {t}</span>)}
+        </div>
+        <button className="btn btn-success" style={{ fontSize:14, padding:"12px 28px" }} onClick={onComplete}>Go to Promotion Builder →</button>
+        <div style={{ fontSize:12, color:"#64748b", marginTop:16 }}>You can return to Configure at any time to update stores, users, or approval rules.</div>
+      </div>
+    </div></div></div>
+  );
+
+  return (
+    <div className="page-shell">
+      <div className="page-header"><div className="page-header-inner"><div className="page-title">Configure</div><div className="page-desc">One-time retailer activation — completed by the Algo1 team during onboarding</div></div></div>
+      <div style={{ background:"#fff", borderBottom:"1.5px solid #e2e8f0", padding:"12px 32px" }}><div style={{ maxWidth:1200, margin:"0 auto" }}><div className="progress-bar">
+        {labels.map((l,i) => <div key={i} className={`progress-step ${i+1<step?"done":i+1===step?"current":"upcoming"}`} onClick={() => {if(i+1<step)setStep(i+1)}}>{i+1<step?"✓ ":""}{i+1}. {l}</div>)}
+      </div></div></div>
+      <div className="page-content"><div className="page-content-inner fade-in" key={step}>
+        <div style={{ display:"flex", gap:24 }}>
+          <div style={{ flex:"2 1 0" }}>
+            {step===1 && <div className="card" style={{ padding:24 }}>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:16 }}>Retailer Details</h3>
+              {[["Retailer name","name"],["Primary contact","contact"],["Email","email"]].map(([l,k]) => <div key={k} className="field-group"><div className="field-label">{l}</div><input className="input" value={retailer[k]} onChange={e => setRetailer({...retailer,[k]:e.target.value})} /></div>)}
+              <div className="field-group"><div className="field-label">Operating region</div><select className="sel" value={retailer.region} onChange={e => setRetailer({...retailer,region:e.target.value})}><option>United Kingdom</option><option>Ireland</option></select></div>
+            </div>}
+            {step===2 && <div className="card" style={{ padding:24 }}>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>Store Registration</h3>
+              <p style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>Each store becomes an addressable promotion location. Select the stores to enable for this retailer.</p>
+              {STORES.map(s => {
+                const checked = selStores.includes(s.id);
+                return <div key={s.id} className={`store-check${checked?" checked":""}`} onClick={() => setSelStores(checked ? selStores.filter(x=>x!==s.id) : [...selStores,s.id])}>
+                  <div className="store-check-box">{checked && <span style={{ fontSize:11, lineHeight:1 }}>✓</span>}</div>
+                  <div style={{ flex:1 }}><div style={{ fontSize:13, fontWeight:600, color:"#334155" }}>{s.name}</div><div style={{ fontSize:11, color:"#94a3b8" }}>{s.region} · {s.hours}</div></div>
+                </div>;
+              })}
+            </div>}
+            {step===3 && <div className="card" style={{ padding:24 }}>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>Users & Roles</h3>
+              <InfoBox type="amber" icon="⚡"><div style={{ fontSize:12, fontWeight:700, color:"#92400e" }}>Trial 1 — Algo1 team only</div><div style={{ fontSize:12, color:"#a16207", marginTop:2 }}>All platform users at Trial 1 are members of the Algo1 team. External brand access is introduced at Commercial v1.</div></InfoBox>
+              {users.map((u,i) => <div key={i} style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 0", borderBottom:"1px solid #f1f5f9" }}>
+                <div className="g-nav-avatar" style={{ width:36, height:36, fontSize:13 }}>{u.name ? u.name.split(" ").map(w=>w[0]).join("") : "?"}</div>
+                <div style={{ flex:1 }}>
+                  <input className="input" placeholder="Full name" value={u.name} onChange={e => { const n=[...users]; n[i]={...n[i],name:e.target.value}; setUsers(n); }} style={{ marginBottom:6 }} />
+                  <select className="sel" value={u.role} onChange={e => { const n=[...users]; n[i]={...n[i],role:e.target.value}; setUsers(n); }}>
+                    <option>Algo1 Sales Team</option><option>Retailer Trade Team</option><option>Loyalty Team</option>
+                  </select>
+                </div>
+              </div>)}
+              <button className="btn-ghost" style={{ marginTop:12, display:"inline-flex", alignItems:"center", gap:4, padding:"8px 16px", borderRadius:8, border:"1.5px dashed #cbd5e1", background:"#f8fafc", cursor:"pointer", fontSize:12, fontWeight:600, color:"#64748b", fontFamily:"inherit" }} onClick={() => setUsers([...users, {name:"",role:"Algo1 Sales Team"}])}>+ Add user</button>
+              <div style={{ marginTop:20 }}><div className="field-label" style={{ marginBottom:8 }}>Role permissions at Trial 1</div>
+                <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
+                  <thead><tr style={{ borderBottom:"2px solid #e2e8f0" }}><th style={{ textAlign:"left", padding:"8px 0", fontWeight:700, color:"#64748b", fontSize:10.5, textTransform:"uppercase", letterSpacing:".05em" }}>Role</th><th style={{ textAlign:"left", padding:"8px 0", fontWeight:700, color:"#64748b", fontSize:10.5, textTransform:"uppercase", letterSpacing:".05em" }}>Permissions</th></tr></thead>
+                  <tbody>
+                    <tr style={{ borderBottom:"1px solid #f1f5f9" }}><td style={{ padding:"8px 0", fontWeight:600 }}>Algo1 Sales Team</td><td style={{ padding:"8px 0", color:"#64748b" }}>Creates promotions on behalf of brands. Monitors performance.</td></tr>
+                    <tr style={{ borderBottom:"1px solid #f1f5f9" }}><td style={{ padding:"8px 0", fontWeight:600 }}>Retailer Trade Team</td><td style={{ padding:"8px 0", color:"#64748b" }}>Approves promotions. Pause override on any live promotion.</td></tr>
+                    <tr><td style={{ padding:"8px 0", fontWeight:600 }}>Loyalty Team</td><td style={{ padding:"8px 0", color:"#64748b" }}>Creates loyalty promotions. Reviews tier outcomes.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>}
+            {step===4 && <div className="card" style={{ padding:24 }}>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>Approval Rules</h3>
+              <p style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>At Trial 1, approval is a simple on/off toggle per role. Configurable thresholds at Commercial v1.</p>
+              {[["Algo1 Sales Team","sales",true],["Loyalty Team","loyalty",true],["Retailer Trade Team","trade",false]].map(([name,key,def]) => (
+                <div key={key} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 16px", marginBottom:8, background: approval[key] ? "#f0fdf4" : "#f8fafc", border: `1.5px solid ${approval[key] ? "#bbf7d0" : "#e2e8f0"}`, borderRadius:10 }}>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color: approval[key] ? "#065f46" : "#475569" }}>{name}</div>
+                    <div style={{ fontSize:11.5, color: approval[key] ? "#065f46" : "#94a3b8", marginTop:2 }}>{approval[key] ? "Requires retailer approval before going live" : "Self-publish — no approval required"}</div>
+                  </div>
+                  <Toggle enabled={approval[key]} onChange={v => setApproval({...approval,[key]:v})} />
+                </div>
+              ))}
+              <InfoBox type="blue" icon="ℹ️"><div style={{ fontSize:12, color:"#1e40af" }}>Changes apply to new submissions only. Existing promotions in the queue keep their current approval state.</div></InfoBox>
+            </div>}
+            {step===5 && <div className="card" style={{ padding:24 }}>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>Integration Readiness</h3>
+              <p style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>Confirms both engineering integrations are operational before enabling the platform.</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                <div style={{ background:"#f0fdf4", border:"1.5px solid #bbf7d0", borderRadius:12, padding:20 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:"#065f46", marginBottom:8 }}>ALGO1 Payload Delivery</div>
+                  <span className="badge badge-green" style={{ marginBottom:10, display:"inline-flex" }}>Operational</span>
+                  <p style={{ fontSize:12, color:"#64748b", lineHeight:1.5 }}>Sends promotion data to ALGO1 when a promotion enters the pool. Data structure and API interface agreed with engineering.</p>
+                </div>
+                <div style={{ background: intRedemption ? "#f0fdf4" : "#fffbeb", border:`1.5px solid ${intRedemption ? "#bbf7d0" : "#fcd34d"}`, borderRadius:12, padding:20 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color: intRedemption ? "#065f46" : "#92400e", marginBottom:8 }}>Redemption Event Receiver</div>
+                  <span className={`badge ${intRedemption ? "badge-green" : "badge-amber"}`} style={{ marginBottom:10, display:"inline-flex" }}>{intRedemption ? "Operational" : "Pending"}</span>
+                  <p style={{ fontSize:12, color:"#64748b", lineHeight:1.5 }}>Receives redemption events from the B2C app. Three options: EPOS integration (target), App QR (fallback), Loyalty auto-credit (long-term).</p>
+                  {!intRedemption && <button className="btn btn-sm btn-warning" style={{ marginTop:10 }} onClick={() => setIntRedemption(true)}>Simulate Connection</button>}
+                </div>
+              </div>
+              {!intRedemption && <InfoBox type="amber" icon="⚠️"><div style={{ fontSize:12, fontWeight:700, color:"#92400e" }}>Open dependency — OD-01: Redemption mechanism</div><div style={{ fontSize:12, color:"#92400e", marginTop:2 }}>Without confirmed redemption data, performance metrics are estimated. Does not block start of build.</div></InfoBox>}
+            </div>}
+          </div>
+          <div style={{ flex:"1 1 0", minWidth:260 }}>
+            <div className="summary-panel" style={{ position:"sticky", top:72 }}>
+              <div className="summary-panel-title">Setup Progress</div>
+              {[["Retailer",step>1?retailer.name:"—"],["Stores",step>2?`${selStores.length} registered`:"—"],["Users",step>3?`${users.filter(u=>u.name).length} assigned`:"—"],["Approval",step>4?"Rules active":"—"],["Integration",step>5?"Connected":"—"]].map(([k,v]) => <div key={k} className="summary-row"><span className="summary-label">{k}</span><span className="summary-value">{v}</span></div>)}
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div style={{ background:"#fff", borderTop:"1.5px solid #e2e8f0", padding:"0 32px" }}><div style={{ maxWidth:1200, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:64 }}>
+        <button className="btn btn-secondary" disabled={step===1} onClick={() => setStep(step-1)}>← Back</button>
+        <button className="btn btn-primary" onClick={() => setStep(step+1)}>{step===5 ? "Complete Setup ✓" : "Continue →"}</button>
+      </div></div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   MODULE 2: PROMOTION BUILDER
+   ═══════════════════════════════════════════ */
+function BuilderModule({ onSubmit }) {
+  const [step, setStep] = useState(1);
+  const [p, setP] = useState({
+    goal:"", mechanic:"", headline:"", description:"", hasImage:false,
+    category:"", brand:"", frequency:"any", gender:[], ageRanges:[], loyaltyTiers:[], pointsMin:"", pointsMax:"",
+    segments:[], excludeBuyers:false, excludeSeen:false,
+    budget:"3000", maxRedemptions:"1", startDate:"2026-04-01", endDate:"2026-04-14", storeScope:"all", selectedStores: STORES.map(s=>s.id),
+  });
+  const [mechConfirmed, setMechConfirmed] = useState(false);
+  const [openPanels, setOpenPanels] = useState({ demographics:false, loyalty:false, shopping:true, segments:false, exclusions:true });
+  const togglePanel = k => setOpenPanels(o => ({...o, [k]:!o[k]}));
+  const labels = ["Goal","Mechanic","Creative","Audience","Budget & Timing"];
+  const goalObj = GOALS.find(g => g.id === p.goal);
+  const mechObj = MECHANICS.find(m => m.id === p.mechanic);
+  const set = (k,v) => setP(prev => ({...prev, [k]:v}));
+  const toggleArr = (k,v) => setP(prev => ({...prev, [k]: prev[k].includes(v) ? prev[k].filter(x=>x!==v) : [...prev[k],v] }));
+
+  const reach = useMemo(() => {
+    let b = TOTAL_SHOPPERS;
+    if (p.gender.length > 0 && p.gender.length < 2) b = Math.round(b * .54);
+    if (p.ageRanges.length > 0 && p.ageRanges.length < 6) b = Math.round(b * p.ageRanges.length * .155);
+    if (p.loyaltyTiers.length > 0) b = Math.round(b * p.loyaltyTiers.length * .22);
+    if (p.category) b = Math.round(b * .28);
+    if (p.brand) b = Math.round(b * .45);
+    if (p.frequency && p.frequency !== "any") b = Math.round(b * .4);
+    if (p.excludeBuyers) b = Math.round(b * .62);
+    if (p.excludeSeen) b = Math.round(b * .78);
+    return Math.max(b, 0);
+  }, [p]);
+  const reachPct = Math.round(reach / TOTAL_SHOPPERS * 100);
+
+  const canProceed = () => {
+    if (step===1) return !!p.goal;
+    if (step===2) return !!p.mechanic && mechConfirmed;
+    if (step===3) return !!p.headline;
+    if (step===5) return !!p.budget && !!p.startDate && !!p.endDate;
+    return true;
+  };
+
+  const audienceSummary = [p.category, p.brand, p.frequency!=="any" ? p.frequency : "", p.excludeBuyers ? "Excl: existing buyers" : "", p.excludeSeen ? "Excl: seen" : ""].filter(Boolean).join(" · ") || "All eligible shoppers";
+
+  return (
+    <div className="page-shell">
+      <div className="page-header"><div className="page-header-inner" style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}><div><div className="page-title">Promotion Builder</div><div className="page-desc">Create, target, and submit promotions to ALGO1</div></div></div></div>
+      <div style={{ background:"#fff", borderBottom:"1.5px solid #e2e8f0", padding:"12px 32px" }}><div style={{ maxWidth:1200, margin:"0 auto" }}><div className="progress-bar" style={{ marginBottom:0 }}>
+        {labels.map((l,i) => <div key={i} className={`progress-step ${i+1<step?"done":i+1===step?"current":"upcoming"}`} onClick={() => {if(i+1<step)setStep(i+1)}}>{i+1<step?"✓ ":""}{i+1}. {l}</div>)}
+      </div></div></div>
+      <div className="page-content"><div className="page-content-inner">
+        <div style={{ display:"flex", gap:20 }}>
+          <div style={{ flex:"2 1 0", minWidth:0 }} className="fade-in" key={step}>
+
+            {/* STEP 1: GOAL */}
+            {step===1 && <>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>What is the promotion objective?</h3>
+              <p style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>One goal per promotion. The selected goal determines the primary metric shown in Campaign Performance.</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                {GOALS.map(g => <div key={g.id} className={`card${p.goal===g.id?" card-selected":""}`} style={{ padding:20, cursor:"pointer" }} onClick={() => set("goal",g.id)}>
+                  <div style={{ fontSize:28, marginBottom:8 }}>{g.icon}</div>
+                  <div style={{ fontSize:15, fontWeight:700, color: p.goal===g.id ? "#1e40af" : "#0f172a", marginBottom:4 }}>{g.name}</div>
+                  <div style={{ fontSize:12, color:"#64748b", lineHeight:1.5 }}>{g.desc}</div>
+                  <div style={{ fontSize:11, color:"#94a3b8", marginTop:8, fontWeight:500 }}>Primary metric: {g.metric}</div>
+                </div>)}
+              </div>
+            </>}
+
+            {/* STEP 2: MECHANIC */}
+            {step===2 && <>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>What does the shopper receive?</h3>
+              <p style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>One mechanic per promotion. The most common mechanic for your goal is highlighted.</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+                {MECHANICS.map(m => {
+                  const isMostUsed = m.mostUsedFor.includes(p.goal);
+                  return <div key={m.id} className={`card${p.mechanic===m.id?" card-selected":""}`} style={{ padding:20, cursor:"pointer", position:"relative" }} onClick={() => { set("mechanic",m.id); setMechConfirmed(false); }}>
+                    {isMostUsed && <span className="badge badge-blue" style={{ position:"absolute", top:12, right:12 }}>Most used</span>}
+                    <div style={{ fontSize:15, fontWeight:700, color: p.mechanic===m.id ? "#1e40af" : "#0f172a", marginBottom:4 }}>{m.name}</div>
+                    <div style={{ fontSize:12, color:"#64748b" }}>{m.desc}</div>
+                  </div>;
+                })}
+              </div>
+              {p.mechanic && !mechConfirmed && <div style={{ background:"#f0fdf4", border:"1.5px solid #bbf7d0", borderRadius:12, padding:16, marginBottom:12 }}>
+                <div style={{ fontSize:13, fontWeight:700, color:"#065f46", marginBottom:6 }}>Confirm what the shopper sees</div>
+                <div style={{ fontSize:14, color:"#334155", fontWeight:600 }}>"{mechObj?.name} — Heinz Baked Beans 415g"</div>
+                <div style={{ marginTop:12, display:"flex", gap:8 }}>
+                  <button className="btn btn-success btn-sm" onClick={() => setMechConfirmed(true)}>Confirm ✓</button>
+                  <button className="btn-ghost" onClick={() => set("mechanic","")}>Change</button>
+                </div>
+              </div>}
+              {mechConfirmed && <InfoBox type="green" icon="✓"><div style={{ fontSize:13, color:"#065f46", fontWeight:600 }}>Confirmed: {mechObj?.name}</div></InfoBox>}
+              {p.mechanic === "bonus_pts" && p.goal !== "loyalty" && <InfoBox type="amber" icon="⚠️"><div style={{ fontSize:12, fontWeight:700, color:"#92400e" }}>Compatibility note</div><div style={{ fontSize:12, color:"#92400e", marginTop:2 }}>Bonus loyalty points paired with {goalObj?.name} is an unusual combination. Consider % Off for faster results. This is a signal, not a block.</div></InfoBox>}
+            </>}
+
+            {/* STEP 3: CREATIVE */}
+            {step===3 && <>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>What does the shopper see?</h3>
+              <p style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>Content shown on the trolley-mounted device. The offer badge is generated from your mechanic.</p>
+              <div style={{ display:"flex", gap:20, marginBottom:20 }}>
+                <div style={{ flex:1 }}><div className="field-group"><div className="field-label">Product image</div>
+                  <div style={{ border:`2px dashed ${p.hasImage?"#86efac":"#dbeafe"}`, borderRadius:12, padding:32, textAlign:"center", cursor:"pointer", background: p.hasImage ? "#f0fdf4" : "#f8fafc", transition:"all .15s" }} onClick={() => set("hasImage",!p.hasImage)}>
+                    {p.hasImage ? <><div style={{ fontSize:28 }}>📷</div><div style={{ fontSize:13, fontWeight:600, color:"#059669", marginTop:4 }}>Image uploaded</div><div style={{ fontSize:11, color:"#64748b", marginTop:2 }}>Click to remove</div></> : <><div style={{ fontSize:28, opacity:.5 }}>🖼️</div><div style={{ fontSize:13, color:"#94a3b8", marginTop:4 }}>Drop image here or click to upload</div><div style={{ fontSize:11, color:"#cbd5e1", marginTop:2 }}>PNG, JPG. Product image or brand asset.</div></>}
+                  </div>
+                </div></div>
+                <div style={{ flex:1 }}>
+                  <div className="field-group"><div className="field-label">Headline</div><input className="input" placeholder="e.g. Try Heinz Baked Beans" value={p.headline} onChange={e => set("headline",e.target.value)} /></div>
+                  <div className="field-group"><div className="field-label">Short description</div><input className="input" placeholder="e.g. 20% off your first purchase this week" value={p.description} onChange={e => set("description",e.target.value)} /></div>
+                </div>
+              </div>
+              {(p.headline || p.description) && <>
+                <div className="field-label" style={{ marginBottom:8 }}>Live Preview — Trolley Screen</div>
+                <div className="preview-bar">
+                  <div style={{ width:60, height:60, background:"#1e3a5f", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><span style={{ fontSize:p.hasImage?24:11, color:p.hasImage?"#fff":"#64748b" }}>{p.hasImage ? "📷" : "Image"}</span></div>
+                  <div>
+                    {mechObj && <span style={{ background:"#2563eb", padding:"3px 12px", borderRadius:6, fontSize:12, fontWeight:700, display:"inline-block", marginBottom:6 }}>{mechObj.name.toUpperCase()}</span>}
+                    {p.headline && <div style={{ fontSize:16, fontWeight:700 }}>{p.headline}</div>}
+                    {p.description && <div style={{ fontSize:12, color:"#94a3b8", marginTop:3 }}>{p.description}</div>}
+                  </div>
+                </div>
+                <div style={{ fontSize:11, color:"#94a3b8", fontStyle:"italic", marginTop:6 }}>Offer badge auto-generated from mechanic. Preview updates as you type.</div>
+              </>}
+            </>}
+
+            {/* STEP 4: AUDIENCE */}
+            {step===4 && <>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>Who should see this promotion?</h3>
+              <p style={{ fontSize:13, color:"#64748b", marginBottom:12 }}>Define targeting rules. ALGO1 matches shoppers in real time. Default: all eligible shoppers. Narrow from here.</p>
+              <InfoBox type="amber" icon="⚡"><div style={{ fontSize:12, fontWeight:700, color:"#92400e" }}>Trial 1 — Simplified targeting</div><div style={{ fontSize:12, color:"#a16207", marginTop:2 }}>Shopping History and Exclusions are the primary dimensions. Demographics and Loyalty are available where retailer data exists.</div></InfoBox>
+
+              {/* 1. Demographics */}
+              <div className={`panel${openPanels.demographics?" open":""}`}>
+                <div className="panel-header" onClick={() => togglePanel("demographics")}><div style={{ display:"flex", alignItems:"center" }}><div className="panel-num">1</div><span className="panel-title">Demographics</span></div><div style={{ display:"flex", alignItems:"center" }}><span className="panel-summary">{p.gender.length || p.ageRanges.length ? `${[...p.gender,...p.ageRanges].join(", ")}` : "No filter"}</span><span className="panel-arrow">▸</span></div></div>
+                {openPanels.demographics && <div className="panel-content slide-down">
+                  <div className="field-group"><div className="field-label">Gender</div><div style={{ display:"flex", gap:6 }}>{["Male","Female"].map(g => <Chip key={g} label={g} active={p.gender.includes(g)} onClick={() => toggleArr("gender",g)} />)}</div></div>
+                  <div className="field-group"><div className="field-label">Age range</div><div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>{AGE_RANGES.map(a => <Chip key={a} label={a} active={p.ageRanges.includes(a)} onClick={() => toggleArr("ageRanges",a)} />)}</div></div>
+                </div>}
+              </div>
+
+              {/* 2. Loyalty */}
+              <div className={`panel${openPanels.loyalty?" open":""}`}>
+                <div className="panel-header" onClick={() => togglePanel("loyalty")}><div style={{ display:"flex", alignItems:"center" }}><div className="panel-num">2</div><span className="panel-title">Loyalty Signals</span></div><div style={{ display:"flex", alignItems:"center" }}><span className="panel-summary">{p.loyaltyTiers.length ? p.loyaltyTiers.join(", ") : "No filter"}</span><span className="panel-arrow">▸</span></div></div>
+                {openPanels.loyalty && <div className="panel-content slide-down">
+                  <div className="field-group"><div className="field-label">Loyalty tier</div><div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>{LOYALTY_TIERS.map(t => <Chip key={t} label={t} active={p.loyaltyTiers.includes(t)} onClick={() => toggleArr("loyaltyTiers",t)} />)}</div></div>
+                  <div className="field-group"><div className="field-label">Points balance</div><div style={{ display:"flex", gap:8 }}><input type="number" className="input" placeholder="Min" value={p.pointsMin} onChange={e => set("pointsMin",e.target.value)} /><input type="number" className="input" placeholder="Max" value={p.pointsMax} onChange={e => set("pointsMax",e.target.value)} /></div></div>
+                </div>}
+              </div>
+
+              {/* 3. Shopping History (renamed from Behaviour Signals) */}
+              <div className={`panel${openPanels.shopping?" open":""}`}>
+                <div className="panel-header" onClick={() => togglePanel("shopping")}><div style={{ display:"flex", alignItems:"center" }}><div className="panel-num">3</div><span className="panel-title">Shopping History</span></div><div style={{ display:"flex", alignItems:"center" }}><span className="panel-summary">{p.category || p.frequency!=="any" ? [p.category,p.brand,p.frequency!=="any"?p.frequency:""].filter(Boolean).join(" · ") : "No filter"}</span><span className="panel-arrow">▸</span></div></div>
+                {openPanels.shopping && <div className="panel-content slide-down">
+                  <div className="field-group"><div className="field-label">Buys this category</div><select className="sel" value={p.category} onChange={e => { set("category",e.target.value); set("brand",""); }}><option value="">All categories</option>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                  <div className="field-group"><div className="field-label">Buys this brand</div><select className="sel" value={p.brand} onChange={e => set("brand",e.target.value)} disabled={!p.category}><option value="">{p.category ? "All brands in "+p.category : "Select a category first"}</option>{p.category && (BRANDS_MAP[p.category]||[]).map(b => <option key={b} value={b}>{b}</option>)}</select></div>
+                  <div className="field-group"><div className="field-label">Shopping frequency</div><div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>{[["any","Any frequency"],["weekly","Weekly+"],["fortnightly","Fortnightly"],["monthly","Monthly"],["less","< Monthly"]].map(([v,l]) => <Chip key={v} label={l} active={p.frequency===v} onClick={() => set("frequency",v)} />)}</div></div>
+                </div>}
+              </div>
+
+              {/* 4. Interest Segments (hidden at T1) */}
+              <div className="panel" style={{ opacity:.5 }}>
+                <div className="panel-header" style={{ cursor:"default" }}><div style={{ display:"flex", alignItems:"center" }}><div className="panel-num" style={{ background:"#94a3b8" }}>4</div><span className="panel-title" style={{ color:"#94a3b8" }}>Interest Segments</span></div><span className="badge badge-purple" style={{ fontSize:10 }}>Commercial v1</span></div>
+              </div>
+
+              {/* 5. Exclusions */}
+              <div className={`panel excl${openPanels.exclusions?" open":""}`}>
+                <div className="panel-header" onClick={() => togglePanel("exclusions")}><div style={{ display:"flex", alignItems:"center" }}><div className="panel-num red">5</div><span className="panel-title">Exclusions</span></div><div style={{ display:"flex", alignItems:"center" }}><span className="panel-summary">{p.excludeBuyers || p.excludeSeen ? [p.excludeBuyers&&"Existing buyers",p.excludeSeen&&"Seen this week"].filter(Boolean).join(", ") : "None"}</span><span className="panel-arrow">▸</span></div></div>
+                {openPanels.exclusions && <div className="panel-content slide-down">
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0", borderBottom:"1px solid #f1f5f9" }}><div><div style={{ fontSize:13, fontWeight:600, color:"#334155" }}>Exclude existing buyers of this brand</div><div style={{ fontSize:11, color:"#94a3b8" }}>Removes shoppers who bought this brand in the last 90 days</div></div><Toggle enabled={p.excludeBuyers} onChange={v => set("excludeBuyers",v)} danger /></div>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 0" }}><div><div style={{ fontSize:13, fontWeight:600, color:"#334155" }}>Exclude shoppers who saw this promotion</div><div style={{ fontSize:11, color:"#94a3b8" }}>Prevents the same shopper seeing this promotion twice in 7 days</div></div><Toggle enabled={p.excludeSeen} onChange={v => set("excludeSeen",v)} danger /></div>
+                </div>}
+              </div>
+
+              {/* Audience summary */}
+              <div style={{ border:"1.5px solid #bfdbfe", borderRadius:12, padding:"12px 16px", background:"#eff6ff", marginTop:8 }}>
+                <div style={{ fontSize:10.5, fontWeight:700, color:"#2563eb", textTransform:"uppercase", letterSpacing:".05em", marginBottom:6 }}>Audience summary</div>
+                <div style={{ fontSize:12.5, color:"#334155" }}>{audienceSummary}</div>
+              </div>
+
+              {/* Zero-reach warning */}
+              {reach === 0 && <InfoBox type="amber" icon="⚠️"><div style={{ fontSize:13, fontWeight:700, color:"#92400e" }}>No shoppers match these criteria</div><div style={{ fontSize:12, color:"#92400e", marginTop:4 }}>Your exclusion rules removed all shoppers from the audience. Remove the "exclude existing buyers" rule, or broaden the age range.</div><div style={{ marginTop:8, display:"flex", gap:8 }}><button className="btn btn-warning btn-sm" onClick={() => { set("excludeBuyers",false); set("excludeSeen",false); }}>Expand Audience</button><button className="btn-ghost" style={{ fontSize:12 }}>Continue Anyway</button></div></InfoBox>}
+            </>}
+
+            {/* STEP 5: BUDGET & TIMING + REVIEW */}
+            {step===5 && <>
+              <h3 style={{ fontSize:16, fontWeight:700, marginBottom:4 }}>Budget, Timing & Store Scope</h3>
+              <p style={{ fontSize:13, color:"#64748b", marginBottom:16 }}>Set the budget cap, schedule, and store scope. Then review and submit.</p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
+                <div>
+                  <div className="field-group"><div className="field-label">Total budget cap (hard limit)</div><div style={{ position:"relative" }}><span style={{ position:"absolute", left:12, top:10, fontSize:13, color:"#94a3b8", fontWeight:600 }}>£</span><input className="input" type="number" style={{ paddingLeft:24 }} value={p.budget} onChange={e => set("budget",e.target.value)} /></div></div>
+                  <div className="field-group"><div className="field-label">Max redemptions per shopper</div><input className="input" type="number" value={p.maxRedemptions} onChange={e => set("maxRedemptions",e.target.value)} /></div>
+                  <div className="field-group"><div className="field-label">Start date</div><input className="input" type="date" value={p.startDate} onChange={e => set("startDate",e.target.value)} /></div>
+                  <div className="field-group"><div className="field-label">End date</div><input className="input" type="date" value={p.endDate} onChange={e => set("endDate",e.target.value)} /></div>
+                </div>
+                <div>
+                  <div className="field-group"><div className="field-label">Store scope</div>
+                    <div style={{ display:"flex", gap:6, marginBottom:12 }}>
+                      <Chip label="All stores" active={p.storeScope==="all"} onClick={() => set("storeScope","all")} />
+                      <Chip label="Specific stores" active={p.storeScope==="specific"} onClick={() => set("storeScope","specific")} />
+                    </div>
+                    {p.storeScope === "specific" && <div style={{ maxHeight:200, overflow:"auto" }}>
+                      {STORES.map(s => {
+                        const ch = p.selectedStores.includes(s.id);
+                        return <div key={s.id} className={`store-check${ch?" checked":""}`} onClick={() => set("selectedStores", ch ? p.selectedStores.filter(x=>x!==s.id) : [...p.selectedStores, s.id])}>
+                          <div className="store-check-box">{ch && <span style={{ fontSize:11, lineHeight:1 }}>✓</span>}</div>
+                          <div><div style={{ fontSize:12, fontWeight:600 }}>{s.name}</div><div style={{ fontSize:10.5, color:"#94a3b8" }}>{s.region}</div></div>
+                        </div>;
+                      })}
+                    </div>}
+                  </div>
+                  {parseInt(p.budget) > 0 && reach > 0 && (() => { const est = Math.round(reach * .34); return est > parseInt(p.budget); })() && <InfoBox type="amber" icon="⚠️"><div style={{ fontSize:12, fontWeight:700, color:"#92400e" }}>Cost projection warning</div><div style={{ fontSize:12, color:"#92400e", marginTop:2 }}>Estimated cost at full redemption: <strong>£{Math.round(reach*.34).toLocaleString()}</strong>. Exceeds budget cap of £{parseInt(p.budget).toLocaleString()}. The promotion pauses when the cap is reached.</div><div style={{ fontSize:11, color:"#94a3b8", fontStyle:"italic", marginTop:4 }}>Signal, not a block.</div></InfoBox>}
+                </div>
+              </div>
+              {/* REVIEW */}
+              <div style={{ borderTop:"2px solid #e2e8f0", paddingTop:20 }}>
+                <h3 style={{ fontSize:16, fontWeight:700, marginBottom:12 }}>Review & Submit</h3>
+                <div className="card" style={{ padding:20 }}>
+                  {[["Goal",goalObj?.name],["Mechanic",mechObj?.name],["Creative",p.headline],["Audience",audienceSummary],["Budget",p.budget?`£${parseInt(p.budget).toLocaleString()}`:null],["Dates",p.startDate&&p.endDate?`${p.startDate} to ${p.endDate}`:null],["Stores",p.storeScope==="all"?`All stores (${STORES.length})`:`${p.selectedStores.length} stores`],["Est. reach",`${reach.toLocaleString()} shoppers`]].map(([k,v]) => <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"8px 0", borderBottom:"1px solid #f1f5f9", fontSize:13 }}><span style={{ fontWeight:700, color:"#0f172a" }}>{k}</span><span style={{ color: v ? "#64748b" : "#dc2626" }}>{v || "Missing"}</span></div>)}
+                </div>
+              </div>
+            </>}
+          </div>
+
+          {/* RIGHT PANEL */}
+          <div style={{ flex:"1 1 0", minWidth:280 }}>
+            <div style={{ position:"sticky", top:72 }}>
+              <div className="summary-panel" style={{ marginBottom:12 }}>
+                <div className="summary-panel-title">Promotion Summary</div>
+                {[["Goal",goalObj?.name],["Mechanic",mechObj?.name],["Audience",step>=4?audienceSummary:null],["Budget",p.budget?`£${parseInt(p.budget).toLocaleString()}`:null],["Stores",p.storeScope==="all"?`All (${STORES.length})`:p.selectedStores?.length?`${p.selectedStores.length} stores`:null]].map(([k,v]) => <div key={k} className="summary-row"><span className="summary-label">{k}</span><span className="summary-value">{v || "—"}</span></div>)}
+                <div style={{ fontSize:10, color:"#94a3b8", fontStyle:"italic", marginTop:8, borderTop:"1px solid #e2e8f0", paddingTop:8 }}>Sticky panel. Updates in real time.</div>
+              </div>
+              {step >= 4 && <div className={`reach-card${reach===0?" warning":""}`}>
+                <div style={{ fontSize:10.5, fontWeight:700, color: reach>0?"#15803d":"#92400e", textTransform:"uppercase", letterSpacing:".08em", marginBottom:8 }}>Estimated Reach</div>
+                <div style={{ fontSize: reach>0?44:18, fontWeight:900, color: reach>0?"#16a34a":"#d97706", lineHeight:1 }}>{reach>0?reach.toLocaleString():"No shoppers match"}</div>
+                {reach > 0 && <>
+                  <div style={{ fontSize:13, color:"#16a34a", marginTop:6, fontWeight:500 }}>~{reachPct}% of {TOTAL_SHOPPERS.toLocaleString()} weekly shoppers</div>
+                  <div style={{ height:8, background:"#e2e8f0", borderRadius:4, overflow:"hidden", marginTop:16 }}>
+                    <div style={{ height:"100%", borderRadius:4, width:`${Math.max(reachPct,3)}%`, background: reachPct>50?"linear-gradient(90deg,#059669,#34d399)":reachPct>20?"linear-gradient(90deg,#f59e0b,#fbbf24)":"linear-gradient(90deg,#ef4444,#f87171)", transition:"width .5s ease-out" }} />
+                  </div>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginTop:4 }}><span style={{ fontSize:10, color:"#94a3b8" }}>Narrow</span><span style={{ fontSize:10, color:"#94a3b8" }}>Broad</span></div>
+                </>}
+                <div style={{ fontSize:11, color:"#64748b", marginTop:12, lineHeight:1.4 }}>Updates live as filters change. Debounced 300–500ms.</div>
+              </div>}
+            </div>
+          </div>
+        </div>
+      </div></div>
+      <div style={{ background:"#fff", borderTop:"1.5px solid #e2e8f0", padding:"0 32px" }}><div style={{ maxWidth:1200, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"space-between", height:64 }}>
+        <button className="btn btn-secondary" disabled={step===1} onClick={() => setStep(step-1)}>← Back</button>
+        <div style={{ display:"flex", gap:8 }}>
+          {step===5 && <button className="btn-ghost" onClick={() => alert("Draft saved")}>Save Draft</button>}
+          {step<5 ? <button className="btn btn-primary" disabled={!canProceed()} onClick={() => setStep(step+1)}>Continue →</button>
+            : <button className="btn btn-primary" disabled={!canProceed()} onClick={() => onSubmit({...p, reach})}>Submit for Approval →</button>}
+        </div>
+      </div></div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   MODULE 3: APPROVAL GATEWAY
+   ═══════════════════════════════════════════ */
+function ApprovalModule({ queue, auditLog, onApprove, onReject, toast, setToast }) {
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectComment, setRejectComment] = useState("");
+  const [expandedId, setExpandedId] = useState(null);
+  const [viewTab, setViewTab] = useState("queue");
+
+  const doReject = () => {
+    if (!rejectReason) return;
+    onReject(rejectTarget, rejectReason, rejectComment);
+    setRejectTarget(null); setRejectReason(""); setRejectComment("");
+  };
+
+  const priorityBadge = p => {
+    if (p==="urgent") return <span className="badge badge-red">Urgent</span>;
+    if (p==="high") return <span className="badge badge-amber">High</span>;
+    return <span className="badge badge-blue">Normal</span>;
+  };
+
+  return (
+    <div className="page-shell">
+      <div className="page-header"><div className="page-header-inner"><div className="page-title">Approval Gateway</div><div className="page-desc">Retailer control over what runs in their stores</div></div></div>
+      <div className="page-content"><div className="page-content-inner">
+        {/* State flow */}
+        <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:16 }}>
+          {[["Draft","sp-draft"],["Pending Approval","sp-pending"],["Scheduled","sp-scheduled"],["Live","sp-live"],["Ended","sp-ended"]].map(([l,c],i) => <React.Fragment key={l}>{i>0&&<span style={{ color:"#93c5fd" }}>→</span>}<span className={`sp ${c}`}>{l}</span></React.Fragment>)}
+          <span style={{ marginLeft:12 }}><span className="sp sp-paused">Paused</span><span style={{ fontSize:11, color:"#64748b", marginLeft:4 }}>Branches from Live</span></span>
+        </div>
+        {/* Who approves what */}
+        <InfoBox type="blue" icon="ℹ️"><div style={{ fontSize:12, color:"#1e40af" }}><strong>Who approves what:</strong> Algo1 Sales Team → requires Retailer Trade Team approval. Loyalty Team → requires approval. Retailer Trade Team → self-publish, no approval. Approval rules are configurable in Configure.</div></InfoBox>
+
+        <div className="tab-bar">
+          <div className={`tab-item${viewTab==="queue"?" active":""}`} onClick={() => setViewTab("queue")}>Pending Queue <span className="badge badge-amber" style={{ marginLeft:4 }}>{queue.length}</span></div>
+          <div className={`tab-item${viewTab==="audit"?" active":""}`} onClick={() => setViewTab("audit")}>Audit Trail</div>
+        </div>
+
+        {viewTab === "queue" && <div style={{ display:"flex", gap:24 }}>
+          <div style={{ flex:"2 1 0" }}>
+            {queue.length === 0 ? <div style={{ textAlign:"center", padding:48 }}><div style={{ fontSize:48, marginBottom:8 }}>✅</div><div style={{ fontSize:16, fontWeight:700, color:"#334155", marginBottom:4 }}>No promotions waiting for approval</div><div style={{ fontSize:13, color:"#94a3b8" }}>Queue is clear.</div></div>
+            : <>
+              <div style={{ fontSize:11, color:"#94a3b8", marginBottom:12 }}>Sorted: budget (high→low), then urgency, then submission time</div>
+              {queue.map(item => (
+                <div key={item.id} className="card" style={{ marginBottom:10 }}>
+                  <div style={{ padding:16, display:"flex", alignItems:"center", gap:12 }}>
+                    {priorityBadge(item.priority)}
+                    <div style={{ flex:1, cursor:"pointer" }} onClick={() => setExpandedId(expandedId===item.id?null:item.id)}>
+                      <div style={{ fontSize:14, fontWeight:700, color:"#0f172a" }}>{item.name}</div>
+                      <div style={{ fontSize:12, color:"#64748b", marginTop:2 }}>{item.submitterRole} · {GOALS.find(g=>g.id===item.goal)?.name} · £{item.budget.toLocaleString()} · Starts {item.startDate}</div>
+                    </div>
+                    <span style={{ fontSize:11, color:"#94a3b8", whiteSpace:"nowrap" }}>{item.submittedAgo} ago</span>
+                    <div style={{ display:"flex", gap:6 }}>
+                      <button className="btn btn-success btn-sm" onClick={() => onApprove(item)}>Approve</button>
+                      <button className="btn btn-sm" style={{ background:"#fff", color:"#dc2626", border:"1.5px solid #fecaca", borderRadius:8, padding:"7px 16px", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"inherit" }} onClick={() => setRejectTarget(item.id)}>Reject</button>
+                    </div>
+                  </div>
+                  {/* Expanded detail */}
+                  {expandedId === item.id && <div className="slide-down" style={{ borderTop:"1px solid #e2e8f0", padding:16 }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+                      <div>
+                        {[["Goal",GOALS.find(g=>g.id===item.goal)?.name],["Mechanic",MECHANICS.find(m=>m.id===item.mechanic)?.name],["Budget",`£${item.budget.toLocaleString()}`],["Dates",`${item.startDate} – ${item.endDate}`],["Stores",item.stores]].map(([k,v]) => <div key={k} style={{ display:"flex", justifyContent:"space-between", padding:"6px 0", borderBottom:"1px solid #f1f5f9", fontSize:12.5 }}><span style={{ fontWeight:700, color:"#0f172a" }}>{k}</span><span style={{ color:"#64748b" }}>{v}</span></div>)}
+                      </div>
+                      <div>
+                        <div className="field-label">Audience</div>
+                        <div style={{ fontSize:12.5, color:"#334155", marginBottom:8 }}>{item.audience}</div>
+                        <div className="field-label">Creative</div>
+                        {item.headline && <div className="preview-bar" style={{ padding:10, gap:10 }}>
+                          <div style={{ width:36, height:36, background:"#1e3a5f", borderRadius:6, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}><span style={{ fontSize:8, color:"#64748b" }}>📷</span></div>
+                          <div><div style={{ fontSize:12, fontWeight:700 }}>{item.headline}</div>{item.description && <div style={{ fontSize:11, color:"#94a3b8" }}>{item.description}</div>}</div>
+                        </div>}
+                        <div style={{ fontSize:12, color:"#64748b", marginTop:8 }}>Submitted by: <strong style={{ color:"#334155" }}>{item.submitter}</strong></div>
+                      </div>
+                    </div>
+                  </div>}
+                </div>
+              ))}
+            </>}
+          </div>
+          {/* Sidebar: recent audit */}
+          <div style={{ flex:"1 1 0", minWidth:300 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#0f172a", marginBottom:8 }}>Recent Activity</div>
+            <div className="card" style={{ padding:12 }}>
+              {auditLog.slice(0,6).map((e,i) => <div key={i} className="audit-row">
+                <div className="audit-dot" style={{ background:e.color }} />
+                <div style={{ flex:1 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between" }}><span style={{ fontWeight:600, color:"#334155", fontSize:12 }}>{e.user}</span><span style={{ fontSize:10.5, color:"#94a3b8" }}>{e.time}</span></div>
+                  <div style={{ fontSize:11.5, color:"#64748b", marginTop:2 }}><span className={`badge badge-${e.color==="#059669"?"green":e.color==="#dc2626"?"red":e.color==="#f59e0b"?"amber":"blue"}`} style={{ marginRight:4, fontSize:10 }}>{e.action}</span>{e.detail}</div>
+                </div>
+              </div>)}
+            </div>
+          </div>
+        </div>}
+
+        {viewTab === "audit" && <div className="card" style={{ padding:20 }}>
+          <div style={{ fontSize:14, fontWeight:700, marginBottom:12 }}>Full Audit Trail</div>
+          {auditLog.map((e,i) => <div key={i} className="audit-row">
+            <div className="audit-dot" style={{ background:e.color }} />
+            <div style={{ flex:1 }}>
+              <div style={{ display:"flex", justifyContent:"space-between" }}><span style={{ fontWeight:600, color:"#334155" }}>{e.user}</span><span style={{ fontSize:11, color:"#94a3b8" }}>{e.time}</span></div>
+              <div style={{ fontSize:12, color:"#64748b", marginTop:2 }}><span className={`badge badge-${e.color==="#059669"?"green":e.color==="#dc2626"?"red":e.color==="#f59e0b"?"amber":"blue"}`} style={{ marginRight:6 }}>{e.action}</span>{e.detail}</div>
+            </div>
+          </div>)}
+        </div>}
+
+      </div></div>
+      {/* Reject modal */}
+      {rejectTarget && <ModalDialog title="Reject Promotion" text="The promotion returns to Draft. The submitter is notified with your reason." onClose={() => setRejectTarget(null)}>
+        <div className="field-group"><div className="field-label">Rejection reason (required)</div><select className="sel" value={rejectReason} onChange={e => setRejectReason(e.target.value)}><option value="">Select a reason...</option>{REJECT_REASONS.map(r => <option key={r} value={r}>{r}</option>)}</select></div>
+        <div className="field-group"><div className="field-label">Additional comment (optional)</div><textarea className="input" rows={3} placeholder="Add context for the submitter..." value={rejectComment} onChange={e => setRejectComment(e.target.value)} /></div>
+        <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}><button className="btn btn-secondary btn-sm" onClick={() => setRejectTarget(null)}>Cancel</button><button className="btn btn-danger btn-sm" disabled={!rejectReason} onClick={doReject}>Reject Promotion</button></div>
+      </ModalDialog>}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   MODULE 4: CAMPAIGN PERFORMANCE
+   ═══════════════════════════════════════════ */
+function PerformanceModule({ live, ended, needsAttention, onPause, onEnd, onIncreaseBudget, onExtend, onClone, onNavigate, toast, setToast }) {
+  const [tab, setTab] = useState("attention");
+  const [expanded, setExpanded] = useState(null);
+
+  const triggerInfo = (p) => {
+    if (p.budget > 0 && p.spent / p.budget > .75 && p.daysLeft > 2) return { label:"Budget risk", desc:`${Math.round(p.spent/p.budget*100)}% consumed, ${p.daysLeft} days remaining`, color:"red", action:"Increase Budget", actionFn: () => onIncreaseBudget(p.id, 2000) };
+    if (p.claims === 0 && p.impressions > 500) return { label:"Zero claims", desc:"No claims after 48 hours live", color:"amber", action:"Edit Promotion", actionFn: () => { setTab("live"); setExpanded(p.id); } };
+    return { label:"Review", desc:"Check this promotion", color:"amber", action:"View", actionFn: () => { setTab("live"); setExpanded(p.id); } };
+  };
+
+  return (
+    <div className="page-shell">
+      <div className="page-header"><div className="page-header-inner"><div className="page-title">Campaign Performance</div><div className="page-desc">One view across all promotions — attention management, not reporting</div></div></div>
+      <div className="page-content"><div className="page-content-inner">
+        {/* KPIs */}
+        <div className="kpi-row" style={{ marginBottom:20 }}>
+          {[["Live",live.length,"#0f172a"],["Needs Attention",needsAttention.length, needsAttention.length>0?"#dc2626":"#059669"],["Impressions",live.reduce((s,p)=>s+p.impressions,0).toLocaleString(),"#0f172a"],["Claims",live.reduce((s,p)=>s+p.claims,0).toLocaleString(),"#0f172a"],["Ended",ended.length,"#0f172a"]].map(([l,v,c]) => <div key={l} className="kpi"><div className="kpi-val" style={{ color:c }}>{v}</div><div className="kpi-lbl">{l}</div></div>)}
+        </div>
+        {/* Tabs */}
+        <div className="tab-bar">
+          <div className={`tab-item${tab==="attention"?" active":""}`} onClick={() => setTab("attention")}>Needs Attention {needsAttention.length>0 && <span className="badge badge-red">{needsAttention.length}</span>}</div>
+          <div className={`tab-item${tab==="live"?" active":""}`} onClick={() => setTab("live")}>Live <span className="badge badge-green">{live.length}</span></div>
+          <div className={`tab-item${tab==="ended"?" active":""}`} onClick={() => setTab("ended")}>Ended <span className="badge badge-gray">{ended.length}</span></div>
+        </div>
+
+        {/* ATTENTION */}
+        {tab==="attention" && (needsAttention.length===0 ? <div style={{ textAlign:"center", padding:48 }}><div style={{ fontSize:48, marginBottom:8 }}>✅</div><div style={{ fontSize:16, fontWeight:700, color:"#334155" }}>All promotions running normally</div><div style={{ fontSize:13, color:"#94a3b8", marginTop:4 }}>No promotions need your attention right now.</div></div>
+          : needsAttention.map(p => { const t = triggerInfo(p); return (
+            <div key={p.id} className={`attn-card${t.color==="amber"?" amber":""} fade-in`}>
+              <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:700, color:"#0f172a" }}>{p.name}</div><div style={{ fontSize:12, fontWeight:600, color:t.color==="red"?"#dc2626":"#92400e", marginTop:4 }}>{t.label} — {t.desc}</div><div style={{ fontSize:12, color:"#64748b", marginTop:4 }}>{GOALS.find(g=>g.id===p.goal)?.name} · £{p.budget.toLocaleString()} budget · {p.impressions.toLocaleString()} impressions · {p.claims} claims</div></div>
+              <button className={`btn btn-sm ${t.color==="red"?"btn-danger":"btn-warning"}`} onClick={t.actionFn}>{t.action}</button>
+            </div>);
+          })
+        )}
+
+        {/* LIVE */}
+        {tab==="live" && (live.length===0 ? <div style={{ textAlign:"center", padding:48 }}><div style={{ fontSize:48, marginBottom:8, opacity:.5 }}>📊</div><div style={{ fontSize:16, fontWeight:700, color:"#334155" }}>No live promotions</div><div style={{ fontSize:13, color:"#94a3b8", marginTop:4 }}>Create a promotion to see performance data here.</div><button className="btn btn-primary" style={{ marginTop:16 }} onClick={() => onNavigate("builder")}>Create a Promotion</button></div>
+          : live.map(p => (
+            <div key={p.id} className="card fade-in" style={{ marginBottom:12 }}>
+              <div style={{ padding:16, display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }} onClick={() => setExpanded(expanded===p.id?null:p.id)}>
+                <div style={{ display:"flex", alignItems:"center", gap:12 }}><span className="sp sp-live">Live</span><div><div style={{ fontSize:14, fontWeight:700, color:"#0f172a" }}>{p.name}</div><div style={{ fontSize:12, color:"#64748b", marginTop:2 }}>{GOALS.find(g=>g.id===p.goal)?.name} · £{p.budget.toLocaleString()} · {p.stores}</div></div></div>
+                <span style={{ fontSize:12, color:"#94a3b8" }}>{expanded===p.id?"▾":"▸"}</span>
+              </div>
+              {expanded===p.id && <div className="slide-down" style={{ borderTop:"1px solid #e2e8f0" }}>
+                <div style={{ padding:16 }}>
+                  <div className="kpi-row">
+                    {[["Impressions",p.impressions.toLocaleString()],["Claims",p.claims.toLocaleString()],["Claim Rate",`${p.claimRate}%`],["Redeemed",p.redeemed.toLocaleString()],["Redemption",`${p.redemptionRate}%`]].map(([l,v]) => <div key={l} className="kpi"><div className="kpi-val">{v}</div><div className="kpi-lbl">{l}</div></div>)}
+                  </div>
+                  {/* Mini bar chart */}
+                  {p.dailyImpressions && p.dailyImpressions.length > 0 && <div style={{ marginTop:12 }}>
+                    <div className="field-label">Daily impressions</div>
+                    <div className="bar-chart" style={{ height:50 }}>{p.dailyImpressions.map((v,i) => <div key={i} className="bar-chart-bar" style={{ height:`${Math.max(v/Math.max(...p.dailyImpressions)*100,2)}%` }} title={`Day ${i+1}: ${v}`} />)}</div>
+                  </div>}
+                  {/* Budget bar */}
+                  <div style={{ marginTop:16 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, fontWeight:600, color:"#64748b", marginBottom:4 }}><span>Budget: £{p.spent.toLocaleString()} / £{p.budget.toLocaleString()}</span><span style={{ color: p.spent/p.budget>.8?"#dc2626":"#64748b" }}>{Math.round(p.spent/p.budget*100)}% used · {p.daysLeft} days left</span></div>
+                    <div style={{ height:8, background:"#e2e8f0", borderRadius:4, overflow:"hidden" }}><div style={{ height:"100%", borderRadius:4, width:`${Math.min(Math.round(p.spent/p.budget*100),100)}%`, background: p.spent/p.budget>.8?"linear-gradient(90deg,#ef4444,#f87171)":"linear-gradient(90deg,#2563eb,#60a5fa)", transition:"width .5s" }} /></div>
+                  </div>
+                  {/* Info */}
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginTop:12, fontSize:12 }}>
+                    <div><span style={{ fontWeight:700, color:"#0f172a" }}>Primary metric:</span> <span style={{ color:"#64748b" }}>{GOALS.find(g=>g.id===p.goal)?.metric}</span></div>
+                    <div><span style={{ fontWeight:700, color:"#0f172a" }}>Audience:</span> <span style={{ color:"#64748b" }}>{p.audience}</span></div>
+                  </div>
+                  {/* Actions */}
+                  <div style={{ display:"flex", gap:8, marginTop:16, flexWrap:"wrap" }}>
+                    <button className="btn-ghost" onClick={() => onPause(p.id)}>⏸ Pause</button>
+                    <button className="btn-ghost" onClick={() => onEnd(p.id)}>End Early</button>
+                    <button className="btn-ghost" onClick={() => onIncreaseBudget(p.id, 1000)}>+£1k Budget</button>
+                    <button className="btn-ghost" onClick={() => onExtend(p.id)}>+7 Days</button>
+                  </div>
+                  <div style={{ fontSize:11, color:"#94a3b8", marginTop:8 }}>Pause/Resume/Extend: single-click with 5s undo toast. End Early/Terminate: confirmation modal required.</div>
+                </div>
+              </div>}
+            </div>
+          ))
+        )}
+
+        {/* ENDED */}
+        {tab==="ended" && (ended.length===0 ? <div style={{ textAlign:"center", padding:48 }}><div style={{ fontSize:48, marginBottom:8, opacity:.5 }}>📋</div><div style={{ fontSize:16, fontWeight:700, color:"#334155" }}>No completed promotions yet</div></div>
+          : ended.map(p => (
+            <div key={p.id} className="card fade-in" style={{ marginBottom:10 }}>
+              <div style={{ padding:16, display:"flex", alignItems:"center", justifyContent:"space-between", cursor:"pointer" }} onClick={() => setExpanded(expanded===p.id?null:p.id)}>
+                <div style={{ display:"flex", alignItems:"center", gap:12 }}><span className={`badge ${p.goalAchieved?"badge-green":"badge-amber"}`}>{p.goalAchieved?"Goal Achieved":"Goal Not Met"}</span><div><div style={{ fontSize:14, fontWeight:700, color:"#0f172a" }}>{p.name}</div><div style={{ fontSize:12, color:"#64748b", marginTop:2 }}>{GOALS.find(g=>g.id===p.goal)?.name} · {p.startDate} – {p.endDate} · £{p.budget.toLocaleString()}</div></div></div>
+                <span style={{ fontSize:12, color:"#94a3b8" }}>{expanded===p.id?"▾":"▸"}</span>
+              </div>
+              {expanded===p.id && <div className="slide-down" style={{ borderTop:"1px solid #e2e8f0", padding:16 }}>
+                <div style={{ background: p.goalAchieved?"#f0fdf4":"#fffbeb", border:`1.5px solid ${p.goalAchieved?"#bbf7d0":"#fcd34d"}`, borderRadius:10, padding:14, marginBottom:16 }}>
+                  <div style={{ fontSize:13, color: p.goalAchieved?"#065f46":"#92400e", lineHeight:1.6 }}><strong>Summary:</strong> {p.summary}</div>
+                </div>
+                <div className="kpi-row">
+                  {[["Impressions",p.impressions.toLocaleString()],["Claims",p.claims.toLocaleString()],["Claim Rate",`${p.claimRate}%`],["Redeemed",p.redeemed.toLocaleString()],["Redemption",`${p.redemptionRate}%`]].map(([l,v]) => <div key={l} className="kpi"><div className="kpi-val">{v}</div><div className="kpi-lbl">{l}</div></div>)}
+                </div>
+                <div style={{ display:"flex", gap:8, marginTop:16 }}>
+                  <button className="btn btn-primary btn-sm" onClick={onClone}>Clone & Improve</button>
+                  <button className="btn-ghost" onClick={onClone}>Repeat as-is</button>
+                  <button className="btn-ghost" style={{ color:"#94a3b8" }}>Archive</button>
+                </div>
+                <div style={{ fontSize:11, color:"#94a3b8", fontStyle:"italic", marginTop:8 }}>Clone & Improve pre-fills the Promotion Builder from this promotion. Repeat as-is uses the same settings with new dates.</div>
+              </div>}
+            </div>
+          ))
+        )}
+      </div></div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   MODULE 5: COMMERCIAL v1
+   ═══════════════════════════════════════════ */
+function Cv1Module() {
+  return (
+    <div className="page-shell">
+      <div className="page-header" style={{ background:"linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%)", borderBottom:"none" }}>
+        <div className="page-header-inner">
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}><span className="badge badge-purple">Commercial v1</span><span style={{ fontSize:12, color:"#94a3b8" }}>9 capabilities</span></div>
+          <div className="page-title" style={{ color:"#fff" }}>What comes next</div>
+          <div className="page-desc" style={{ color:"#94a3b8" }}>ALGO1 extends across the full promotion lifecycle: from generating promotions to forecasting performance, pacing budget, detecting conflicts, analysing results, and benchmarking against historical data.</div>
+        </div>
+      </div>
+      <div className="page-content"><div className="page-content-inner">
+        <InfoBox type="purple" icon="🔮"><div style={{ fontSize:13, fontWeight:700, color:"#4338ca" }}>Forecasting Tool</div><div style={{ fontSize:12.5, color:"#64748b", marginTop:4, lineHeight:1.6 }}>The centrepiece of Commercial v1. Before submission, ALGO1 estimates expected redemptions, projected spend, and goal likelihood — and recommends adjustments. Visible to both the creator and the approver at point of decision. No competitor shows predictions to the approver.</div></InfoBox>
+
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginTop:16 }}>
+          {CV1_FEATURES.map(f => (
+            <div key={f.name} className="cv1-card">
+              <div style={{ fontSize:24, marginBottom:8 }}>{f.icon}</div>
+              <div style={{ fontSize:14, fontWeight:700, color:"#312e81", marginBottom:4 }}>{f.name}</div>
+              <div style={{ fontSize:12, color:"#64748b", lineHeight:1.5, marginBottom:8 }}>{f.desc}</div>
+              <span className="badge badge-purple" style={{ fontSize:10 }}>Extends: {f.module}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop:24 }}>
+          <h3 style={{ fontSize:16, fontWeight:700, marginBottom:12 }}>Competitive positioning</h3>
+          <div className="card" style={{ padding:20 }}>
+            <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12.5 }}>
+              <thead><tr style={{ borderBottom:"2px solid #e2e8f0" }}>{["Capability","Competitor","Algo1 difference"].map(h => <th key={h} style={{ textAlign:"left", padding:"8px 12px", fontWeight:700, color:"#64748b", fontSize:10.5, textTransform:"uppercase", letterSpacing:".05em" }}>{h}</th>)}</tr></thead>
+              <tbody>
+                {[["Automated creation","Walmart Connect","Brand Manager sets objective. ALGO1 generates full promotion."],["Forecasting","SAP PMR, Adobe","Predictions visible to approver at point of decision, not just creator."],["Conflict detection","No competitor does this","Identifies overlapping audiences before publication. Pool health monitoring."],["LLM analysis","Eversight","Post-campaign insight extraction: time, weather, store, audience segment."]].map(([c,comp,diff],i) => <tr key={i} style={{ borderBottom:"1px solid #f1f5f9" }}><td style={{ padding:"10px 12px", fontWeight:600, color:"#334155" }}>{c}</td><td style={{ padding:"10px 12px", color:"#64748b" }}>{comp}</td><td style={{ padding:"10px 12px", color:"#334155" }}>{diff}</td></tr>)}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div style={{ background:"linear-gradient(135deg,#eff6ff,#dbeafe)", border:"1.5px solid #bfdbfe", borderRadius:12, padding:20, marginTop:20, display:"flex", alignItems:"center", gap:16 }}>
+          <span style={{ fontSize:28 }}>💡</span>
+          <div><div style={{ fontSize:14, fontWeight:700, color:"#1e40af" }}>No single competitor combines structured promotion creation, retailer approval, real-time in-store delivery, and full lifecycle management in one platform.</div><div style={{ fontSize:12.5, color:"#334155", marginTop:6 }}>Retail media platforms deliver ads, not promotions. Trade promotion platforms plan promotions but do not deliver them in real time. Algo1 sits in the gap between these two worlds.</div></div>
+        </div>
+      </div></div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   SCALE DATA GENERATOR
+   ═══════════════════════════════════════════ */
+function generateScaleData() {
+  const brands = ["Cadbury","Heinz","Kellogg's","Coca-Cola","Walkers","Dove","Persil","Müller","Birds Eye","Pedigree","Weetabix","L'Oréal","Mars","Pepsi","Arla","Cathedral City","Warburtons","McCain","Pampers","Ribena","Quaker","Felix","Lucozade","Hovis","Fairy","Dettol","Pringles","Nivea","Aptamil","Yeo Valley"];
+  const goals = ["trial","purchase","stock","loyalty"];
+  const mechs = ["pct_off","spend_get","bogo","bonus_pts"];
+  const statuses = ["draft","pending","scheduled","live","ended"];
+  const rand = (min,max) => Math.floor(Math.random()*(max-min+1))+min;
+  const pick = arr => arr[rand(0,arr.length-1)];
+  const promos = [];
+  const now = Date.now();
+  for (let i = 0; i < 1247; i++) {
+    const status = i < 18 ? "draft" : i < 42 ? "pending" : i < 97 ? "scheduled" : i < 409 ? "live" : "ended";
+    const goal = pick(goals);
+    const mech = pick(mechs);
+    const brand = pick(brands);
+    const cat = pick(CATEGORIES);
+    const budget = rand(5,80)*100;
+    const spent = status==="ended" ? budget*rand(70,100)/100 : status==="live" ? budget*rand(10,95)/100 : 0;
+    const impressions = status==="live" ? rand(200,45000) : status==="ended" ? rand(1000,80000) : 0;
+    const claims = Math.round(impressions * rand(5,35)/100);
+    const redeemed = Math.round(claims * rand(60,95)/100);
+    const claimRate = impressions > 0 ? +(claims/impressions*100).toFixed(1) : 0;
+    const redemptionRate = claims > 0 ? +(redeemed/claims*100).toFixed(1) : 0;
+    const daysLeft = status==="live" ? rand(1,21) : 0;
+    const budgetRisk = status==="live" && spent/budget > .75 && daysLeft > 2;
+    const zeroClaims = status==="live" && claims === 0 && impressions > 500;
+    const lowConversion = status==="live" && claimRate < 5 && impressions > 2000;
+    const severity = budgetRisk ? "critical" : zeroClaims ? "critical" : lowConversion ? "warning" : null;
+    const goalAchieved = status==="ended" ? Math.random() > .35 : null;
+    const roi = status==="ended" && spent > 0 ? +((redeemed*rand(3,12)/spent)*100).toFixed(0)/100 : null;
+    const sparkline = [];
+    if (status==="live"||status==="ended") { for(let d=0;d<rand(5,14);d++) sparkline.push(rand(20,100)); }
+    promos.push({ id:10000+i, name:`${mech==="pct_off"?rand(10,30)+"% off":mech==="bogo"?"BOGO":mech==="spend_get"?"Spend £"+rand(15,30)+" Get £"+rand(2,5):"Bonus Points"} ${brand} ${cat}`, brand, category:cat, goal, mechanic:mech, status, budget, spent:Math.round(spent), impressions, claims, redeemed, claimRate, redemptionRate, daysLeft, severity, goalAchieved, roi, sparkline, stores:rand(1,6)+" stores", submitter:pick(["Sarah Jones","Mike Chen","Tom Williams","Emma Davis","Priya Patel","James Wilson"]), startDate:`${rand(1,28)} ${pick(["Jan","Feb","Mar","Apr"])} 2026`, endDate:`${rand(1,28)} ${pick(["Mar","Apr","May","Jun"])} 2026` });
+  }
+  return promos;
+}
+const SCALE_PROMOS = generateScaleData();
+
+/* ═══════════════════════════════════════════
+   MODULE 6: SCALE VISION
+   ═══════════════════════════════════════════ */
+function ScaleModule() {
+  const [view, setView] = useState("portfolio");
+  const [search, setSearch] = useState("");
+  const [groupBy, setGroupBy] = useState("brand");
+  const [sortCol, setSortCol] = useState("spent");
+  const [sortDir, setSortDir] = useState("desc");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterGoal, setFilterGoal] = useState("all");
+  const [selectedPromo, setSelectedPromo] = useState(null);
+  const [compareMode, setCompareMode] = useState("brand");
+
+  const counts = useMemo(() => {
+    const c = { draft:0, pending:0, scheduled:0, live:0, ended:0 };
+    SCALE_PROMOS.forEach(p => c[p.status]++);
+    return c;
+  }, []);
+
+  const livePromos = useMemo(() => SCALE_PROMOS.filter(p => p.status === "live"), []);
+  const endedPromos = useMemo(() => SCALE_PROMOS.filter(p => p.status === "ended"), []);
+  const triageItems = useMemo(() => {
+    const items = livePromos.filter(p => p.severity);
+    items.sort((a,b) => (a.severity==="critical"?0:1) - (b.severity==="critical"?0:1) || b.budget - a.budget);
+    return items;
+  }, [livePromos]);
+
+  const totalBudget = livePromos.reduce((s,p) => s+p.budget, 0);
+  const totalSpent = livePromos.reduce((s,p) => s+p.spent, 0);
+  const totalImpressions = livePromos.reduce((s,p) => s+p.impressions, 0);
+  const totalClaims = livePromos.reduce((s,p) => s+p.claims, 0);
+  const totalRedeemed = livePromos.reduce((s,p) => s+p.redeemed, 0);
+  const avgClaimRate = totalImpressions > 0 ? (totalClaims/totalImpressions*100).toFixed(1) : 0;
+  const avgRedemptionRate = totalClaims > 0 ? (totalRedeemed/totalClaims*100).toFixed(1) : 0;
+  const endedWithGoal = endedPromos.filter(p => p.goalAchieved);
+  const goalRate = endedPromos.length > 0 ? Math.round(endedWithGoal.length/endedPromos.length*100) : 0;
+
+  /* Filter and sort for table view */
+  const filtered = useMemo(() => {
+    let list = [...SCALE_PROMOS];
+    if (filterStatus !== "all") list = list.filter(p => p.status === filterStatus);
+    if (filterGoal !== "all") list = list.filter(p => p.goal === filterGoal);
+    if (search) { const s = search.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(s) || p.brand.toLowerCase().includes(s) || p.category.toLowerCase().includes(s)); }
+    list.sort((a,b) => {
+      let va = a[sortCol], vb = b[sortCol];
+      if (typeof va === "string") { va = va.toLowerCase(); vb = (vb||"").toLowerCase(); }
+      if (va < vb) return sortDir === "asc" ? -1 : 1;
+      if (va > vb) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }, [filterStatus, filterGoal, search, sortCol, sortDir]);
+
+  /* Group data for comparative */
+  const compareData = useMemo(() => {
+    const field = compareMode === "brand" ? "brand" : compareMode === "goal" ? "goal" : "category";
+    const groups = {};
+    livePromos.forEach(p => {
+      const key = p[field] || "Unknown";
+      if (!groups[key]) groups[key] = { name: key, count:0, budget:0, spent:0, impressions:0, claims:0, redeemed:0 };
+      const g = groups[key]; g.count++; g.budget+=p.budget; g.spent+=p.spent; g.impressions+=p.impressions; g.claims+=p.claims; g.redeemed+=p.redeemed;
+    });
+    return Object.values(groups).sort((a,b) => b.spent - a.spent).slice(0,15);
+  }, [compareMode, livePromos]);
+  const maxCompareSpent = compareData.length > 0 ? Math.max(...compareData.map(g => g.spent)) : 1;
+
+  const toggleSort = col => { if (sortCol===col) setSortDir(d => d==="asc"?"desc":"asc"); else { setSortCol(col); setSortDir("desc"); } };
+  const sortArrow = col => sortCol===col ? (sortDir==="asc"?" ↑":" ↓") : "";
+
+  const statusColor = s => ({ draft:"#94a3b8", pending:"#f59e0b", scheduled:"#3b82f6", live:"#059669", ended:"#64748b" }[s]);
+  const goalLabel = g => ({ trial:"Drive Trial", purchase:"Increase Purchase", stock:"Clear Stock", loyalty:"Loyalty Reward" }[g] || g);
+
+  return (
+    <div className="page-shell">
+      <div className="page-header" style={{ background:"linear-gradient(135deg,#0f172a 0%,#1e293b 100%)", borderBottom:"none" }}>
+        <div className="page-header-inner">
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}><span className="badge badge-blue">Scale Vision</span><span style={{ fontSize:12, color:"#94a3b8" }}>1,247 promotions across 30 brands</span></div>
+          <div className="page-title" style={{ color:"#fff" }}>Portfolio Command Centre</div>
+          <div className="page-desc" style={{ color:"#94a3b8" }}>Aggregate performance, severity-based triage, smart tables, and comparative analytics. Designed for thousands of promotions.</div>
+        </div>
+      </div>
+      <div className="page-content"><div className="page-content-inner">
+
+        {/* Sub-nav */}
+        <div className="tab-bar">
+          {[["portfolio","Portfolio Dashboard"],["triage","Triage"],["table","Smart Table"],["compare","Comparative"],["detail","Promo Detail"]].map(([k,l]) => (
+            <div key={k} className={`tab-item${view===k?" active":""}`} onClick={() => setView(k)}>
+              {l}
+              {k==="triage" && triageItems.length > 0 && <span className="badge badge-red" style={{ marginLeft:4 }}>{triageItems.length}</span>}
+            </div>
+          ))}
+        </div>
+
+        {/* ─── PORTFOLIO DASHBOARD ─── */}
+        {view==="portfolio" && <div className="fade-in">
+          {/* Pipeline bar */}
+          <div style={{ fontSize:13, fontWeight:700, color:"#0f172a", marginBottom:6 }}>Promotion Pipeline</div>
+          <div className="sv-pipeline">
+            {[["draft",counts.draft,"#94a3b8"],["pending",counts.pending,"#f59e0b"],["scheduled",counts.scheduled,"#3b82f6"],["live",counts.live,"#059669"],["ended",counts.ended,"#475569"]].map(([s,n,c]) => (
+              <div key={s} className="sv-pipe-seg" style={{ background:c, flex: Math.max(n/Math.max(counts.ended,1),0.08) }} onClick={() => { setFilterStatus(s); setView("table"); }}>
+                <div className="sv-pipe-val">{n}</div>
+                <div className="sv-pipe-lbl">{s}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Top-level KPIs */}
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:12, margin:"20px 0" }}>
+            {[
+              ["Total Budget","£"+totalBudget.toLocaleString(),"#0f172a","Live promotions"],
+              ["Total Spent","£"+totalSpent.toLocaleString(),totalSpent/totalBudget>.8?"#dc2626":"#0f172a",Math.round(totalSpent/totalBudget*100)+"% utilised"],
+              ["Avg Claim Rate",avgClaimRate+"%","#0f172a","Across "+livePromos.length+" live"],
+              ["Avg Redemption",avgRedemptionRate+"%","#0f172a","Claims → redeemed"],
+              ["Goal Achievement",goalRate+"%",goalRate>60?"#059669":"#f59e0b",endedWithGoal.length+"/"+endedPromos.length+" ended"],
+              ["Need Attention",triageItems.length.toString(),triageItems.length>10?"#dc2626":"#f59e0b",triageItems.filter(t=>t.severity==="critical").length+" critical"],
+            ].map(([l,v,c,sub]) => (
+              <div key={l} className="kpi" style={{ padding:16 }}>
+                <div className="kpi-val" style={{ color:c, fontSize:22 }}>{v}</div>
+                <div className="kpi-lbl" style={{ marginTop:6 }}>{l}</div>
+                <div style={{ fontSize:10, color:"#94a3b8", marginTop:4 }}>{sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Two-column: top brands + top alerts */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
+            <div className="card" style={{ padding:20 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:"#0f172a", marginBottom:12 }}>Top Brands by Live Spend</div>
+              {compareData.slice(0,8).map((g,i) => (
+                <div key={g.name} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:"#94a3b8", width:18, textAlign:"right" }}>{i+1}</span>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:3 }}><span style={{ fontSize:12, fontWeight:600, color:"#334155" }}>{g.name}</span><span style={{ fontSize:11, color:"#64748b" }}>£{g.spent.toLocaleString()} / £{g.budget.toLocaleString()}</span></div>
+                    <div style={{ height:6, background:"#e2e8f0", borderRadius:3, overflow:"hidden" }}><div style={{ height:"100%", borderRadius:3, width:`${Math.round(g.spent/maxCompareSpent*100)}%`, background:"linear-gradient(90deg,#2563eb,#60a5fa)" }} /></div>
+                  </div>
+                  <span className="badge badge-blue" style={{ fontSize:10 }}>{g.count}</span>
+                </div>
+              ))}
+            </div>
+            <div className="card" style={{ padding:20 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:"#0f172a" }}>Critical Alerts</div>
+                <span style={{ fontSize:11, color:"#dc2626", fontWeight:600, cursor:"pointer" }} onClick={() => setView("triage")}>View all {triageItems.length} →</span>
+              </div>
+              {triageItems.slice(0,6).map(p => (
+                <div key={p.id} className={`sv-triage-card ${p.severity}`} onClick={() => { setSelectedPromo(p); setView("detail"); }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#0f172a" }}>{p.name.length>40?p.name.slice(0,40)+"...":p.name}</div>
+                    <div style={{ fontSize:11, color:p.severity==="critical"?"#dc2626":"#92400e", marginTop:2 }}>
+                      {p.severity==="critical" && p.spent/p.budget>.75 ? `Budget ${Math.round(p.spent/p.budget*100)}% used, ${p.daysLeft}d left` : p.claims===0 ? "Zero claims" : `Claim rate ${p.claimRate}% (low)`}
+                    </div>
+                  </div>
+                  <span className={`badge ${p.severity==="critical"?"badge-red":"badge-amber"}`}>{p.severity}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Performance by goal type */}
+          <div className="card" style={{ padding:20, marginTop:20 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"#0f172a", marginBottom:12 }}>Performance by Goal Type (Live)</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
+              {["trial","purchase","stock","loyalty"].map(g => {
+                const gp = livePromos.filter(p => p.goal === g);
+                const gClaims = gp.reduce((s,p)=>s+p.claims,0);
+                const gImpressions = gp.reduce((s,p)=>s+p.impressions,0);
+                const gRate = gImpressions>0?(gClaims/gImpressions*100).toFixed(1):0;
+                return (
+                  <div key={g} style={{ background:"#f8faff", borderRadius:10, padding:14, border:"1px solid #e2e8f0" }}>
+                    <div style={{ fontSize:20, marginBottom:4 }}>{GOALS.find(x=>x.id===g)?.icon}</div>
+                    <div style={{ fontSize:13, fontWeight:700, color:"#0f172a" }}>{goalLabel(g)}</div>
+                    <div style={{ fontSize:22, fontWeight:800, color:"#2563eb", margin:"6px 0" }}>{gp.length}</div>
+                    <div style={{ fontSize:11, color:"#64748b" }}>live · {gRate}% claim rate</div>
+                    <div style={{ fontSize:11, color:"#64748b" }}>£{gp.reduce((s,p)=>s+p.spent,0).toLocaleString()} spent</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>}
+
+        {/* ─── TRIAGE VIEW ─── */}
+        {view==="triage" && <div className="fade-in">
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
+            <div>
+              <div style={{ fontSize:16, fontWeight:700, color:"#0f172a" }}>Triage Queue</div>
+              <div style={{ fontSize:13, color:"#64748b" }}>Severity-ranked. Critical items first, sorted by budget at risk.</div>
+            </div>
+            <div style={{ display:"flex", gap:8 }}>
+              <span className="badge badge-red" style={{ fontSize:12, padding:"6px 12px" }}>{triageItems.filter(t=>t.severity==="critical").length} critical</span>
+              <span className="badge badge-amber" style={{ fontSize:12, padding:"6px 12px" }}>{triageItems.filter(t=>t.severity==="warning").length} warning</span>
+            </div>
+          </div>
+
+          {/* Critical section */}
+          {triageItems.filter(t=>t.severity==="critical").length > 0 && <>
+            <div style={{ fontSize:12, fontWeight:700, color:"#dc2626", textTransform:"uppercase", letterSpacing:".06em", marginBottom:8, marginTop:16 }}>Critical — action within hours</div>
+            {triageItems.filter(t=>t.severity==="critical").slice(0,20).map(p => (
+              <div key={p.id} className="sv-triage-card critical" onClick={() => { setSelectedPromo(p); setView("detail"); }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#0f172a" }}>{p.name}</div>
+                  <div style={{ fontSize:12, color:"#64748b", marginTop:3 }}>{p.brand} · {goalLabel(p.goal)} · £{p.budget.toLocaleString()} · {p.stores}</div>
+                  <div style={{ fontSize:12, color:"#dc2626", fontWeight:600, marginTop:3 }}>
+                    {p.spent/p.budget>.75 ? `Budget ${Math.round(p.spent/p.budget*100)}% consumed with ${p.daysLeft} days remaining. £${(p.budget-p.spent).toLocaleString()} left.` : `Zero claims after ${p.impressions.toLocaleString()} impressions. Delivery issue or audience mismatch.`}
+                  </div>
+                </div>
+                <div style={{ display:"flex", gap:6 }}>
+                  <button className="btn btn-sm btn-danger" onClick={e => {e.stopPropagation();}}>Action</button>
+                </div>
+              </div>
+            ))}
+          </>}
+
+          {/* Warning section */}
+          {triageItems.filter(t=>t.severity==="warning").length > 0 && <>
+            <div style={{ fontSize:12, fontWeight:700, color:"#92400e", textTransform:"uppercase", letterSpacing:".06em", marginBottom:8, marginTop:20 }}>Warning — review this week</div>
+            {triageItems.filter(t=>t.severity==="warning").slice(0,20).map(p => (
+              <div key={p.id} className="sv-triage-card warning" onClick={() => { setSelectedPromo(p); setView("detail"); }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"#0f172a" }}>{p.name}</div>
+                  <div style={{ fontSize:12, color:"#64748b", marginTop:3 }}>{p.brand} · {goalLabel(p.goal)} · £{p.budget.toLocaleString()}</div>
+                  <div style={{ fontSize:12, color:"#92400e", fontWeight:600, marginTop:3 }}>Claim rate {p.claimRate}% below expected range. Consider audience or creative adjustment.</div>
+                </div>
+              </div>
+            ))}
+          </>}
+
+          {triageItems.length === 0 && <div style={{ textAlign:"center", padding:48 }}><div style={{ fontSize:48, marginBottom:8 }}>✅</div><div style={{ fontSize:16, fontWeight:700 }}>All promotions running normally</div></div>}
+        </div>}
+
+        {/* ─── SMART TABLE ─── */}
+        {view==="table" && <div className="fade-in">
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, flexWrap:"wrap", gap:12 }}>
+            <div className="sv-search"><span style={{ color:"#94a3b8", fontSize:14 }}>🔍</span><input placeholder="Search promotions, brands, categories..." value={search} onChange={e => setSearch(e.target.value)} /></div>
+            <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+              <select className="sel" style={{ width:130, padding:"7px 10px", fontSize:12 }} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                <option value="all">All statuses</option>{["draft","pending","scheduled","live","ended"].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase()+s.slice(1)} ({counts[s]})</option>)}
+              </select>
+              <select className="sel" style={{ width:150, padding:"7px 10px", fontSize:12 }} value={filterGoal} onChange={e => setFilterGoal(e.target.value)}>
+                <option value="all">All goals</option>{GOALS.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+              <select className="sel" style={{ width:120, padding:"7px 10px", fontSize:12 }} value={groupBy} onChange={e => setGroupBy(e.target.value)}>
+                <option value="none">No grouping</option><option value="brand">Group: Brand</option><option value="goal">Group: Goal</option><option value="status">Group: Status</option>
+              </select>
+              <span style={{ fontSize:11, color:"#94a3b8" }}>{filtered.length} results</span>
+            </div>
+          </div>
+
+          <div className="card" style={{ overflow:"auto", maxHeight:"60vh" }}>
+            <table className="sv-table">
+              <thead><tr>
+                <th onClick={() => toggleSort("name")}>Promotion{sortArrow("name")}</th>
+                <th onClick={() => toggleSort("brand")}>Brand{sortArrow("brand")}</th>
+                <th onClick={() => toggleSort("goal")}>Goal{sortArrow("goal")}</th>
+                <th onClick={() => toggleSort("status")}>Status{sortArrow("status")}</th>
+                <th onClick={() => toggleSort("budget")} style={{ textAlign:"right" }}>Budget{sortArrow("budget")}</th>
+                <th onClick={() => toggleSort("spent")} style={{ textAlign:"right" }}>Spent{sortArrow("spent")}</th>
+                <th onClick={() => toggleSort("claimRate")} style={{ textAlign:"right" }}>Claim %{sortArrow("claimRate")}</th>
+                <th>Trend</th>
+                <th onClick={() => toggleSort("daysLeft")} style={{ textAlign:"right" }}>Days Left{sortArrow("daysLeft")}</th>
+              </tr></thead>
+              <tbody>
+                {filtered.slice(0,100).map(p => (
+                  <tr key={p.id} style={{ cursor:"pointer" }} onClick={() => { setSelectedPromo(p); setView("detail"); }}>
+                    <td style={{ maxWidth:200, overflow:"hidden", textOverflow:"ellipsis", fontWeight:600 }}>{p.name}</td>
+                    <td>{p.brand}</td>
+                    <td><span style={{ fontSize:11 }}>{goalLabel(p.goal)}</span></td>
+                    <td><span className={`sp sp-${p.status}`}>{p.status}</span></td>
+                    <td style={{ textAlign:"right", fontWeight:600 }}>£{p.budget.toLocaleString()}</td>
+                    <td style={{ textAlign:"right" }}>
+                      {p.spent > 0 && <span style={{ color: p.budget>0&&p.spent/p.budget>.8?"#dc2626":"#334155" }}>£{p.spent.toLocaleString()}</span>}
+                      {p.spent === 0 && <span style={{ color:"#cbd5e1" }}>—</span>}
+                    </td>
+                    <td style={{ textAlign:"right" }}>
+                      {p.claimRate > 0 && <span style={{ color: p.claimRate < 5 ? "#dc2626" : p.claimRate > 20 ? "#059669" : "#334155", fontWeight:600 }}>{p.claimRate}%</span>}
+                      {p.claimRate === 0 && <span style={{ color:"#cbd5e1" }}>—</span>}
+                    </td>
+                    <td>
+                      {p.sparkline.length > 0 && <div className="sv-sparkline">{p.sparkline.map((v,i) => <span key={i} style={{ height:`${v}%`, background: p.severity==="critical"?"#ef4444":"#2563eb", opacity: i===p.sparkline.length-1?.9:.5 }} />)}</div>}
+                    </td>
+                    <td style={{ textAlign:"right", fontWeight:600, color: p.daysLeft>0&&p.daysLeft<3?"#dc2626":"#334155" }}>{p.daysLeft>0?p.daysLeft:"—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filtered.length > 100 && <div style={{ padding:12, textAlign:"center", fontSize:12, color:"#64748b", borderTop:"1px solid #e2e8f0" }}>Showing 100 of {filtered.length}. Use filters or search to narrow results.</div>}
+          </div>
+        </div>}
+
+        {/* ─── COMPARATIVE ─── */}
+        {view==="compare" && <div className="fade-in">
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+            <div><div style={{ fontSize:16, fontWeight:700, color:"#0f172a" }}>Comparative Analytics</div><div style={{ fontSize:13, color:"#64748b" }}>Compare performance across brands, goals, or categories. Live promotions only.</div></div>
+            <div style={{ display:"flex", gap:6 }}>
+              {[["brand","By Brand"],["goal","By Goal"],["category","By Category"]].map(([k,l]) => <button key={k} className={`btn-ghost${compareMode===k?" active":""}`} style={compareMode===k?{background:"#2563eb",color:"#fff",borderColor:"#2563eb"}:{}} onClick={() => setCompareMode(k)}>{l}</button>)}
+            </div>
+          </div>
+
+          <div className="card" style={{ padding:20 }}>
+            <table className="sv-table">
+              <thead><tr>
+                <th>{compareMode==="brand"?"Brand":compareMode==="goal"?"Goal":"Category"}</th>
+                <th style={{ textAlign:"right" }}>Count</th>
+                <th style={{ textAlign:"right" }}>Budget</th>
+                <th style={{ textAlign:"right" }}>Spent</th>
+                <th style={{ textAlign:"right" }}>Utilisation</th>
+                <th style={{ textAlign:"right" }}>Impressions</th>
+                <th style={{ textAlign:"right" }}>Claims</th>
+                <th style={{ textAlign:"right" }}>Claim Rate</th>
+                <th>Spend Distribution</th>
+              </tr></thead>
+              <tbody>
+                {compareData.map(g => {
+                  const cr = g.impressions>0?(g.claims/g.impressions*100).toFixed(1):0;
+                  const util = g.budget>0?Math.round(g.spent/g.budget*100):0;
+                  return (
+                    <tr key={g.name}>
+                      <td style={{ fontWeight:700 }}>{compareMode==="goal" ? goalLabel(g.name) : g.name}</td>
+                      <td style={{ textAlign:"right" }}>{g.count}</td>
+                      <td style={{ textAlign:"right" }}>£{g.budget.toLocaleString()}</td>
+                      <td style={{ textAlign:"right" }}>£{g.spent.toLocaleString()}</td>
+                      <td style={{ textAlign:"right" }}><span style={{ color: util>80?"#dc2626":"#334155", fontWeight:600 }}>{util}%</span></td>
+                      <td style={{ textAlign:"right" }}>{g.impressions.toLocaleString()}</td>
+                      <td style={{ textAlign:"right" }}>{g.claims.toLocaleString()}</td>
+                      <td style={{ textAlign:"right" }}><span style={{ color: cr<5?"#dc2626":cr>20?"#059669":"#334155", fontWeight:600 }}>{cr}%</span></td>
+                      <td><div style={{ height:8, background:"#e2e8f0", borderRadius:4, width:120, overflow:"hidden" }}><div style={{ height:"100%", borderRadius:4, width:`${Math.round(g.spent/maxCompareSpent*100)}%`, background:"linear-gradient(90deg,#2563eb,#60a5fa)" }} /></div></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Scatter-style summary */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20, marginTop:20 }}>
+            <div className="card" style={{ padding:20 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:"#0f172a", marginBottom:12 }}>Claim Rate Distribution</div>
+              <div style={{ display:"flex", alignItems:"flex-end", gap:4, height:120 }}>
+                {compareData.map(g => {
+                  const cr = g.impressions>0?(g.claims/g.impressions*100):0;
+                  return <div key={g.name} title={`${compareMode==="goal"?goalLabel(g.name):g.name}: ${cr.toFixed(1)}%`} style={{ flex:1, background: cr<5?"#ef4444":cr>20?"#22c55e":"#3b82f6", borderRadius:"4px 4px 0 0", height:`${Math.max(cr/30*100,5)}%`, opacity:.8, transition:"height .5s" }} />;
+                })}
+              </div>
+              <div style={{ display:"flex", gap:4, marginTop:4 }}>
+                {compareData.map(g => <div key={g.name} style={{ flex:1, fontSize:7, color:"#94a3b8", textAlign:"center", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{compareMode==="goal"?goalLabel(g.name).slice(0,6):g.name.slice(0,6)}</div>)}
+              </div>
+            </div>
+            <div className="card" style={{ padding:20 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:"#0f172a", marginBottom:12 }}>Budget Utilisation</div>
+              <div style={{ display:"flex", alignItems:"flex-end", gap:4, height:120 }}>
+                {compareData.map(g => {
+                  const util = g.budget>0?Math.round(g.spent/g.budget*100):0;
+                  return <div key={g.name} title={`${compareMode==="goal"?goalLabel(g.name):g.name}: ${util}%`} style={{ flex:1, background: util>80?"#ef4444":util>50?"#f59e0b":"#3b82f6", borderRadius:"4px 4px 0 0", height:`${Math.max(util,5)}%`, opacity:.8, transition:"height .5s" }} />;
+                })}
+              </div>
+              <div style={{ display:"flex", gap:4, marginTop:4 }}>
+                {compareData.map(g => <div key={g.name} style={{ flex:1, fontSize:7, color:"#94a3b8", textAlign:"center", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{compareMode==="goal"?goalLabel(g.name).slice(0,6):g.name.slice(0,6)}</div>)}
+              </div>
+            </div>
+          </div>
+        </div>}
+
+        {/* ─── PROMO DETAIL ─── */}
+        {view==="detail" && selectedPromo && <div className="fade-in">
+          <button className="btn-ghost" style={{ marginBottom:16 }} onClick={() => setView("table")}>← Back to Table</button>
+          <div className="card" style={{ padding:24 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16 }}>
+              <div>
+                <div style={{ fontSize:18, fontWeight:800, color:"#0f172a" }}>{selectedPromo.name}</div>
+                <div style={{ fontSize:13, color:"#64748b", marginTop:4 }}>{selectedPromo.brand} · {goalLabel(selectedPromo.goal)} · {selectedPromo.stores} · {selectedPromo.submitter}</div>
+              </div>
+              <span className={`sp sp-${selectedPromo.status}`}>{selectedPromo.status}</span>
+            </div>
+            <div className="kpi-row" style={{ marginBottom:16 }}>
+              {[["Budget","£"+selectedPromo.budget.toLocaleString()],["Spent","£"+selectedPromo.spent.toLocaleString()],["Impressions",selectedPromo.impressions.toLocaleString()],["Claims",selectedPromo.claims.toLocaleString()],["Claim Rate",selectedPromo.claimRate+"%"],["Redemption",selectedPromo.redemptionRate+"%"]].map(([l,v]) => <div key={l} className="kpi"><div className="kpi-val" style={{ fontSize:18 }}>{v}</div><div className="kpi-lbl">{l}</div></div>)}
+            </div>
+            {selectedPromo.sparkline.length > 0 && <div style={{ marginBottom:16 }}>
+              <div className="field-label">Daily Performance Trend</div>
+              <div className="bar-chart" style={{ height:80 }}>{selectedPromo.sparkline.map((v,i) => <div key={i} className="bar-chart-bar" style={{ height:`${v}%`, background: selectedPromo.severity==="critical"?"#ef4444":"#2563eb" }} />)}</div>
+            </div>}
+            {selectedPromo.budget > 0 && <div style={{ marginBottom:16 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, fontWeight:600, color:"#64748b", marginBottom:4 }}><span>Budget utilisation</span><span style={{ color: selectedPromo.spent/selectedPromo.budget>.8?"#dc2626":"#64748b" }}>{Math.round(selectedPromo.spent/selectedPromo.budget*100)}%</span></div>
+              <div style={{ height:10, background:"#e2e8f0", borderRadius:5, overflow:"hidden" }}><div style={{ height:"100%", borderRadius:5, width:`${Math.min(Math.round(selectedPromo.spent/selectedPromo.budget*100),100)}%`, background: selectedPromo.spent/selectedPromo.budget>.8?"linear-gradient(90deg,#ef4444,#f87171)":"linear-gradient(90deg,#2563eb,#60a5fa)" }} /></div>
+            </div>}
+            {selectedPromo.severity && <InfoBox type={selectedPromo.severity==="critical"?"red":"amber"} icon={selectedPromo.severity==="critical"?"🔴":"🟡"}>
+              <div style={{ fontSize:12, fontWeight:700, color:selectedPromo.severity==="critical"?"#dc2626":"#92400e" }}>{selectedPromo.severity==="critical"?"Critical alert":"Warning"}</div>
+              <div style={{ fontSize:12, color:"#64748b", marginTop:2 }}>
+                {selectedPromo.spent/selectedPromo.budget>.75 ? `Budget is ${Math.round(selectedPromo.spent/selectedPromo.budget*100)}% consumed with ${selectedPromo.daysLeft} days remaining. Recommend increasing budget or ending early.` : selectedPromo.claims===0 ? "Zero claims despite impressions. Likely audience mismatch or creative issue." : `Claim rate ${selectedPromo.claimRate}% is below the expected 8-15% range for this goal type.`}
+              </div>
+            </InfoBox>}
+            <div style={{ display:"flex", gap:8, marginTop:16 }}>
+              <button className="btn btn-primary btn-sm">Clone & Improve</button>
+              <button className="btn-ghost">+£2k Budget</button>
+              <button className="btn-ghost">+7 Days</button>
+              <button className="btn-ghost">Pause</button>
+              <button className="btn-ghost" style={{ color:"#dc2626", borderColor:"#fecaca" }}>End Early</button>
+            </div>
+          </div>
+        </div>}
+
+        {view==="detail" && !selectedPromo && <div style={{ textAlign:"center", padding:48 }}><div style={{ fontSize:16, fontWeight:700 }}>Select a promotion from the table to see details</div><button className="btn btn-primary" style={{ marginTop:12 }} onClick={() => setView("table")}>Go to Table</button></div>}
+
+      </div></div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   MODULE 7: FORECASTING TOOL
+   ═══════════════════════════════════════════ */
+function ForecastModule() {
+  const [selectedPromo, setSelectedPromo] = useState(null);
+  const [showAdjusted, setShowAdjusted] = useState(false);
+  const goalLabel = g => ({ trial:"Drive Trial", purchase:"Increase Purchase", stock:"Clear Stock", loyalty:"Loyalty Reward" }[g] || g);
+
+  const samplePromos = [
+    { id:1, name:"30% off Cadbury Dairy Milk 180g", brand:"Cadbury", goal:"trial", mechanic:"pct_off", budget:5000, audience:"Snacks & Confectionery, 25-44", stores:"All stores (6)", duration:14 },
+    { id:2, name:"BOGO Weetabix 24pk", brand:"Weetabix", goal:"stock", mechanic:"bogo", budget:3000, audience:"Breakfast Cereals, Existing buyers", stores:"London stores (3)", duration:7 },
+    { id:3, name:"Spend £20 Get £3 Off Dairy", brand:"Arla", goal:"purchase", mechanic:"spend_get", budget:8000, audience:"Dairy, 35+, Gold tier", stores:"All stores (6)", duration:21 },
+  ];
+
+  const forecasts = {
+    1: { redemptions:{ low:320, mid:580, high:890 }, spend:{ low:2100, mid:3800, high:5400 }, goalProb:72, pacing:"steady", peakDay:"Day 3-5", risk:"Budget may exhaust by Day 11 at mid-range. Consider £6,000.", audience:12400, adjustedBudget:6000, adjustedRedemptions:{ low:380, mid:680, high:1020 }, adjustedGoalProb:84, similar:{ count:23, avgClaim:18.2, avgRedeem:82, bestBrand:"Mars", bestRate:24.1 } },
+    2: { redemptions:{ low:180, mid:340, high:520 }, spend:{ low:1800, mid:2900, high:3100 }, goalProb:61, pacing:"front-loaded", peakDay:"Day 1-2", risk:"BOGO mechanics tend to front-load. 60% of redemptions in first 3 days.", audience:8200, adjustedBudget:3000, adjustedRedemptions:{ low:220, mid:410, high:580 }, adjustedGoalProb:73, similar:{ count:14, avgClaim:22.5, avgRedeem:79, bestBrand:"Kellogg's", bestRate:28.3 } },
+    3: { redemptions:{ low:440, mid:820, high:1350 }, spend:{ low:4200, mid:7100, high:8200 }, goalProb:55, pacing:"slow-build", peakDay:"Day 8-12", risk:"Spend-get mechanics need time. First 5 days typically show low conversion. Don't panic-pause.", audience:18600, adjustedBudget:10000, adjustedRedemptions:{ low:580, mid:1050, high:1680 }, adjustedGoalProb:71, similar:{ count:31, avgClaim:14.8, avgRedeem:85, bestBrand:"Cathedral City", bestRate:19.2 } },
+  };
+
+  const sp = selectedPromo;
+  const fc = sp ? forecasts[sp.id] : null;
+  const data = showAdjusted && fc ? { redemptions: fc.adjustedRedemptions, goalProb: fc.adjustedGoalProb, budget: fc.adjustedBudget } : (fc ? { redemptions: fc.redemptions, goalProb: fc.goalProb, budget: sp.budget } : null);
+
+  return (
+    <div className="page-shell">
+      <div className="page-header" style={{ background:"linear-gradient(135deg,#312e81 0%,#4338ca 100%)", borderBottom:"none" }}>
+        <div className="page-header-inner">
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}><span className="badge" style={{ background:"#c4b5fd", color:"#312e81" }}>Commercial v1</span><span style={{ fontSize:12, color:"#a5b4fc" }}>Forecasting Engine</span></div>
+          <div className="page-title" style={{ color:"#fff" }}>Forecasting Tool</div>
+          <div className="page-desc" style={{ color:"#a5b4fc" }}>Before submission, ALGO1 estimates expected redemptions, projected spend, and goal likelihood. Visible to both the creator and the approver at point of decision.</div>
+        </div>
+      </div>
+      <div className="page-content"><div className="page-content-inner">
+
+        {!sp && <>
+          <InfoBox type="purple" icon="🔮"><div style={{ fontSize:13, fontWeight:700, color:"#4338ca" }}>Select a promotion to see its forecast</div><div style={{ fontSize:12, color:"#64748b", marginTop:4 }}>ALGO1 analyses historical performance of similar promotions (same goal, mechanic, audience profile) to predict outcomes before you submit.</div></InfoBox>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginTop:16 }}>
+            {samplePromos.map(p => (
+              <div key={p.id} className="card" style={{ padding:20, cursor:"pointer", transition:"all .15s" }} onClick={() => setSelectedPromo(p)}>
+                <div style={{ fontSize:14, fontWeight:700, color:"#0f172a", marginBottom:4 }}>{p.name}</div>
+                <div style={{ fontSize:12, color:"#64748b", lineHeight:1.6 }}>
+                  {p.brand} · {goalLabel(p.goal)} · £{p.budget.toLocaleString()}<br/>
+                  {p.audience}<br/>
+                  {p.stores} · {p.duration} days
+                </div>
+                <button className="btn btn-sm" style={{ marginTop:12, background:"#4338ca", color:"#fff" }}>Generate Forecast →</button>
+              </div>
+            ))}
+          </div>
+        </>}
+
+        {sp && fc && <>
+          <button className="btn-ghost" style={{ marginBottom:16 }} onClick={() => { setSelectedPromo(null); setShowAdjusted(false); }}>← Back to Selection</button>
+          <div className="card" style={{ padding:20, marginBottom:16 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+              <div>
+                <div style={{ fontSize:16, fontWeight:800, color:"#0f172a" }}>{sp.name}</div>
+                <div style={{ fontSize:12, color:"#64748b", marginTop:4 }}>{sp.brand} · {goalLabel(sp.goal)} · £{data.budget.toLocaleString()} · {sp.audience} · {sp.duration} days</div>
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                <button className={`btn-ghost${!showAdjusted?" active":""}`} style={!showAdjusted?{background:"#4338ca",color:"#fff",borderColor:"#4338ca"}:{}} onClick={() => setShowAdjusted(false)}>Original</button>
+                <button className={`btn-ghost${showAdjusted?" active":""}`} style={showAdjusted?{background:"#4338ca",color:"#fff",borderColor:"#4338ca"}:{}} onClick={() => setShowAdjusted(true)}>ALGO1 Adjusted</button>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:16, marginBottom:20 }}>
+            {/* Goal probability dial */}
+            <div className="card" style={{ padding:24, textAlign:"center" }}>
+              <div style={{ fontSize:12, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:".06em", marginBottom:12 }}>Goal Achievement Probability</div>
+              <div className="fc-dial" style={{ background:`conic-gradient(${data.goalProb>65?"#22c55e":data.goalProb>40?"#f59e0b":"#ef4444"} ${data.goalProb*3.6}deg, #e2e8f0 0deg)` }}>
+                <div className="fc-dial-inner" style={{ background:"#fff", borderRadius:"50%", width:90, height:90, display:"flex", alignItems:"center", justifyContent:"center", flexDirection:"column" }}>
+                  <div style={{ fontSize:28, fontWeight:900, color: data.goalProb>65?"#059669":data.goalProb>40?"#f59e0b":"#dc2626" }}>{data.goalProb}%</div>
+                  <div style={{ fontSize:9, color:"#64748b", fontWeight:600 }}>LIKELIHOOD</div>
+                </div>
+              </div>
+              {showAdjusted && <div style={{ fontSize:11, color:"#059669", fontWeight:600, marginTop:8 }}>+{fc.adjustedGoalProb - fc.goalProb}% with adjustments</div>}
+            </div>
+
+            {/* Redemption range */}
+            <div className="card" style={{ padding:24 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:".06em", marginBottom:12 }}>Expected Redemptions</div>
+              <div style={{ textAlign:"center", marginBottom:16 }}><span style={{ fontSize:32, fontWeight:900, color:"#0f172a" }}>{data.redemptions.mid.toLocaleString()}</span><span style={{ fontSize:13, color:"#64748b", marginLeft:4 }}>mid-range</span></div>
+              {[["Optimistic",data.redemptions.high,"#22c55e"],["Mid-range",data.redemptions.mid,"#3b82f6"],["Conservative",data.redemptions.low,"#f59e0b"]].map(([l,v,c]) => (
+                <div key={l} style={{ marginBottom:8 }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:3 }}><span style={{ color:"#64748b" }}>{l}</span><span style={{ fontWeight:700, color:"#334155" }}>{v.toLocaleString()}</span></div>
+                  <div className="fc-bar"><div className="fc-bar-fill" style={{ width:`${Math.round(v/data.redemptions.high*100)}%`, background:c }} /></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Spend projection */}
+            <div className="card" style={{ padding:24 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:".06em", marginBottom:12 }}>Projected Spend</div>
+              <div style={{ textAlign:"center", marginBottom:16 }}><span style={{ fontSize:32, fontWeight:900, color:"#0f172a" }}>£{fc.spend.mid.toLocaleString()}</span><span style={{ fontSize:13, color:"#64748b", marginLeft:4 }}>of £{data.budget.toLocaleString()}</span></div>
+              <div style={{ marginBottom:12 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:3 }}><span style={{ color:"#64748b" }}>Projected utilisation</span><span style={{ fontWeight:700, color: fc.spend.mid/data.budget>.9?"#dc2626":"#334155" }}>{Math.round(fc.spend.mid/data.budget*100)}%</span></div>
+                <div className="fc-bar" style={{ height:12 }}><div className="fc-bar-fill" style={{ width:`${Math.min(Math.round(fc.spend.mid/data.budget*100),100)}%`, background: fc.spend.mid/data.budget>.9?"linear-gradient(90deg,#ef4444,#f87171)":"linear-gradient(90deg,#2563eb,#60a5fa)" }} /></div>
+              </div>
+              <div style={{ fontSize:11, color:"#64748b" }}>
+                <div>Pacing pattern: <strong style={{ color:"#334155" }}>{fc.pacing}</strong></div>
+                <div>Peak expected: <strong style={{ color:"#334155" }}>{fc.peakDay}</strong></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Risk + recommendation */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:20 }}>
+            <InfoBox type="amber" icon="⚠️"><div style={{ fontSize:13, fontWeight:700, color:"#92400e" }}>Risk Signal</div><div style={{ fontSize:12, color:"#92400e", marginTop:4, lineHeight:1.6 }}>{fc.risk}</div></InfoBox>
+            <InfoBox type="green" icon="💡"><div style={{ fontSize:13, fontWeight:700, color:"#065f46" }}>ALGO1 Recommendation</div><div style={{ fontSize:12, color:"#065f46", marginTop:4, lineHeight:1.6 }}>Increase budget to £{fc.adjustedBudget.toLocaleString()} for optimal goal probability. This is based on {fc.similar.count} similar promotions. {!showAdjusted && <span style={{ cursor:"pointer", textDecoration:"underline", fontWeight:700 }} onClick={() => setShowAdjusted(true)}>Apply adjustments →</span>}</div></InfoBox>
+          </div>
+
+          {/* Historical comparison */}
+          <div className="card" style={{ padding:20 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:"#0f172a", marginBottom:12 }}>Historical Comparison — {fc.similar.count} Similar Promotions</div>
+            <div style={{ fontSize:12, color:"#64748b", marginBottom:16 }}>Same goal type ({goalLabel(sp.goal)}) and mechanic, similar audience size and budget range. Historical data from the past 6 months.</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12 }}>
+              {[
+                ["Avg Claim Rate",fc.similar.avgClaim+"%","Across "+fc.similar.count+" promotions"],
+                ["Avg Redemption",fc.similar.avgRedeem+"%","Claims converted"],
+                ["Best Performer",fc.similar.bestRate+"%",fc.similar.bestBrand],
+                ["Your Estimate",(fc.redemptions.mid/(fc.audience||1)*100).toFixed(1)+"%","Based on audience of "+fc.audience.toLocaleString()],
+              ].map(([l,v,sub]) => (
+                <div key={l} style={{ background:"#f8faff", borderRadius:10, padding:14, border:"1px solid #e2e8f0", textAlign:"center" }}>
+                  <div style={{ fontSize:20, fontWeight:800, color:"#4338ca" }}>{v}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:"#64748b", textTransform:"uppercase", letterSpacing:".04em", marginTop:4 }}>{l}</div>
+                  <div style={{ fontSize:10, color:"#94a3b8", marginTop:2 }}>{sub}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Approver note */}
+          <div style={{ background:"linear-gradient(135deg,#eff6ff,#dbeafe)", border:"1.5px solid #bfdbfe", borderRadius:12, padding:20, marginTop:16, display:"flex", alignItems:"center", gap:16 }}>
+            <span style={{ fontSize:28 }}>👁️</span>
+            <div><div style={{ fontSize:14, fontWeight:700, color:"#1e40af" }}>Visible to the approver</div><div style={{ fontSize:12.5, color:"#334155", marginTop:4 }}>When this promotion enters the Approval Gateway, the Retailer Trade Team sees this forecast alongside the promotion details. No competitor shows predictions to the approver at point of decision.</div></div>
+          </div>
+        </>}
+
+      </div></div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════════ */
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+</script>
+</body>
+</html>
